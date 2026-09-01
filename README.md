@@ -2,7 +2,7 @@
 
 Reusable Symfony UX QR Code package: Twig Components + Stimulus + custom SVG renderer + API + secure payloads.
 
-![Custom QR Code](./Docs/custome-3.png)
+![Custom QR Code](./docs/custome-3.png)
 
 ## Included
 

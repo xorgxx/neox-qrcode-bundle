@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Neox QR Code Studio</title>
+    <style>
+        :root {
+            --neox-bg: #0f1115;
+            --neox-panel: #171a21;
+            --neox-panel-2: #1e222b;
+            --neox-border: #2a2f3a;
+            --neox-text: #e9ecf1;
+            --neox-muted: #9aa3b2;
+            --neox-accent: #d59618;
+            --neox-accent-2: #00e5c9;
+            --neox-danger: #e5484d;
+            --neox-radius: 14px;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: radial-gradient(1200px 600px at 10% -10%, #22283a 0%, var(--neox-bg) 55%);
+            color: var(--neox-text);
+            min-height: 100vh;
+        }
+        header.neox-studio__header {
+            padding: 1.75rem 2rem 1rem;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+        header.neox-studio__header h1 { margin: 0; font-size: 1.4rem; letter-spacing: .02em; }
+        header.neox-studio__header span { color: var(--neox-muted); font-size: .9rem; }
+        main.neox-studio {
+            display: grid;
+            grid-template-columns: minmax(280px, 340px) 1fr;
+            gap: 1rem;
+            padding: 0 1.5rem 1.5rem;
+            align-items: start;
+        }
+        .neox-card {
+            background: var(--neox-panel);
+            border: 1px solid var(--neox-border);
+            border-radius: var(--neox-radius);
+            padding: .8rem .9rem;
+        }
+        .neox-studio__panel { display: grid; gap: .6rem; }
+        .neox-section summary {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: .82rem;
+            color: var(--neox-text);
+            padding: .2rem 0;
+            list-style: none;
+        }
+        .neox-section summary::-webkit-details-marker { display: none; }
+        .neox-section summary::before { content: '▸ '; color: var(--neox-accent); }
+        .neox-section[open] summary::before { content: '▾ '; }
+        .neox-section .neox-grid { padding: .4rem 0 .1rem .15rem; display: grid; gap: .45rem; }
+        .neox-field { display: grid; gap: .2rem; font-size: .78rem; color: var(--neox-muted); }
+        .neox-field input[type="text"],
+        .neox-field select {
+            background: var(--neox-panel-2);
+            border: 1px solid var(--neox-border);
+            color: var(--neox-text);
+            border-radius: 6px;
+            padding: .35rem .5rem;
+            font: inherit;
+            font-size: .82rem;
+        }
+        .neox-field input[type="color"] {
+            width: 100%; height: 1.8rem; padding: 0; border: 1px solid var(--neox-border); border-radius: 6px; background: none;
+        }
+        .neox-field input[type="range"] { width: 100%; }
+        .neox-inline { display: flex; align-items: center; gap: .4rem; }
+        .neox-inline select { flex: 1; }
+        .neox-inline input[type="color"] {
+            width: 1.8rem; height: 1.8rem; padding: 0; border: 1px solid var(--neox-border); border-radius: 6px; background: none; cursor: pointer; flex-shrink: 0;
+        }
+        .neox-row { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; }
+        .neox-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: .35rem; }
+        .neox-preset {
+            background: var(--neox-panel-2);
+            border: 2px solid var(--neox-border);
+            border-radius: 8px;
+            padding: .25rem;
+            cursor: pointer;
+            display: grid;
+            gap: .15rem;
+            justify-items: center;
+            text-align: center;
+        }
+        .neox-preset svg { width: 100%; height: auto; max-width: 52px; }
+        .neox-preset span { font-size: .62rem; color: var(--neox-muted); text-transform: capitalize; }
+        .neox-preset.is-active { border-color: var(--neox-accent); }
+        .neox-preset[data-preset=""] { border-style: dashed; }
+        .neox-preview-wrap {
+            display: grid;
+            gap: 1rem;
+            justify-items: center;
+        }
+        .neox-preview {
+            position: relative;
+            width: 100%;
+            min-height: 380px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            place-items: center;
+            gap: 1rem;
+            background: repeating-conic-gradient(#20242e 0% 25%, #191c24 0% 50%) 50% / 22px 22px;
+            border-radius: var(--neox-radius);
+            border: 1px solid var(--neox-border);
+            padding: 1.5rem;
+        }
+        .neox-preview > #neox-preview-content { grid-column: 1; grid-row: 1; }
+        .neox-preview > .neox-meta { grid-column: 2; grid-row: 1; }
+        .neox-preview svg { display: block; width: min(100%, 460px); height: auto; max-height: 460px; filter: drop-shadow(0 10px 24px rgba(0,0,0,.35)); transition: opacity .12s ease; }
+        .neox-preview.is-loading svg { opacity: .35; }
+        .neox-meta {
+            grid-column: 2;
+            align-self: start;
+            min-width: 140px;
+            max-width: 180px;
+            display: grid;
+            gap: .3rem;
+            font-size: .68rem;
+            color: var(--neox-muted);
+            padding: .6rem .7rem;
+            background: rgba(15, 17, 21, .85);
+            border: 1px solid var(--neox-border);
+            border-radius: 8px;
+            backdrop-filter: blur(4px);
+        }
+        .neox-meta dt { font-weight: 600; color: var(--neox-text); white-space: nowrap; }
+        .neox-meta dd { margin: 0; }
+        .neox-meta__item { display: flex; gap: .3rem; align-items: baseline; justify-content: space-between; }
+        .neox-preview__loader {
+            grid-column: 1;
+            grid-row: 1;
+            display: none;
+            place-items: center;
+            border-radius: var(--neox-radius);
+            background: rgba(15, 17, 21, .25);
+            z-index: 10;
+        }
+        .neox-preview.is-loading .neox-preview__loader { display: grid; }
+        .neox-preview__spinner {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, .18);
+            border-top-color: var(--neox-accent);
+            animation: neox-spin .7s linear infinite;
+        }
+        @keyframes neox-spin { to { transform: rotate(360deg); } }
+        button.neox-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+        .neox-actions { display: flex; flex-wrap: wrap; gap: .6rem; justify-content: center; }
+        button.neox-btn {
+            font: inherit;
+            border: 1px solid var(--neox-border);
+            background: var(--neox-panel-2);
+            color: var(--neox-text);
+            padding: .55rem 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform .1s ease, border-color .15s ease;
+        }
+        button.neox-btn:hover { border-color: var(--neox-accent); transform: translateY(-1px); }
+        button.neox-btn.neox-btn--primary { background: var(--neox-accent); color: #14110a; border-color: var(--neox-accent); font-weight: 600; }
+        .neox-status { min-height: 1.4em; font-size: .85rem; text-align: center; }
+        .neox-status.is-error { color: var(--neox-danger); }
+        .neox-status.is-warning { color: var(--neox-accent); }
+        .neox-status.is-ok { color: var(--neox-accent-2); }
+        @media (max-width: 900px) {
+            main.neox-studio { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<header class="neox-studio__header">
+    <h1>Neox QR Code Studio</h1>
+    <span>Aperçu 100% dynamique, généré côté serveur via l'API Neox QR Code</span>
+</header>
+
+<main class="neox-studio">
+    <section class="neox-card neox-studio__panel">
+        <div class="neox-field">
+            <label for="neox-content">Contenu du QR code</label>
+            <input type="text" id="neox-content" value="{{ initialContent }}">
+        </div>
+        <div class="neox-actions" style="justify-content: flex-start;">
+            <button type="button" class="neox-btn" id="neox-randomize">Contenu aléatoire</button>
+        </div>
+
+        <details class="neox-section" open>
+            <summary>Presets</summary>
+            <div class="neox-presets">
+                <div class="neox-preset is-active" data-preset="">
+                    <span>Personnalisé</span>
+                </div>
+                {% for name, svg in presetPreviews %}
+                    <div class="neox-preset" data-preset="{{ name }}">
+                        {{ svg|raw }}
+                        <span>{{ name }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="neox-field" style="margin-top: .5rem;">
+                <label>Mes presets</label>
+                <div id="neox-user-presets" style="display: flex; flex-wrap: wrap; gap: .35rem;"></div>
+                <div style="display: flex; gap: .4rem; margin-top: .4rem;">
+                    <input type="text" id="neox-user-preset-name" placeholder="Nom du preset" style="flex:1; background: var(--neox-panel-2); border: 1px solid var(--neox-border); color: var(--neox-text); border-radius: 6px; padding: .35rem .5rem; font-size: .82rem;">
+                    <button type="button" class="neox-btn" id="neox-save-preset" style="padding: .35rem .6rem; font-size: .82rem;">Sauvegarder</button>
+                </div>
+            </div>
+        </details>
+
+        <details class="neox-section" open>
+            <summary>Modules</summary>
+            <div class="neox-grid">
+                <div class="neox-field">
+                    <label for="neox-moduleShape">Forme &amp; couleur</label>
+                    <div class="neox-inline">
+                        <select id="neox-moduleShape">
+                            <option value="square">Square</option>
+                            <option value="rounded">Rounded</option>
+                            <option value="dot">Dots</option>
+                            <option value="diamond">Diamond</option>
+                            <option value="heart">Heart</option>
+                            <option value="liquid">Liquid</option>
+                        </select>
+                        <input type="color" id="neox-foreground" value="#111111" title="Couleur modules">
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details class="neox-section">
+            <summary>Repères</summary>
+            <div class="neox-grid">
+                <div class="neox-field">
+                    <label for="neox-finderShape">Forme &amp; couleur</label>
+                    <div class="neox-inline">
+                        <select id="neox-finderShape">
+                            <option value="square">Square</option>
+                            <option value="rounded">Rounded</option>
+                            <option value="circle">Circle</option>
+                            <option value="diamond">Diamond</option>
+                            <option value="leaf">Leaf</option>
+                            <option value="hexagon">Hexagon</option>
+                            <option value="star">Star</option>
+                            <option value="dotted">Dotted</option>
+                            <option value="minimal">Minimal</option>
+                            <option value="inverted">Inverted</option>
+                        </select>
+                        <input type="color" id="neox-finderColor" value="#111111" title="Couleur repères">
+                    </div>
+                </div>
+                <div class="neox-field">
+                    <label for="neox-finderEyeShape">Forme de l'œil</label>
+                    <select id="neox-finderEyeShape">
+                        <option value="">Automatique</option>
+                        <option value="square">Carré</option>
+                        <option value="rounded">Carré arrondi</option>
+                        <option value="circle">Rond</option>
+                        <option value="diamond">Losange</option>
+                        <option value="leaf">Feuille</option>
+                        <option value="hexagon">Hexagone</option>
+                        <option value="star">Étoile</option>
+                    </select>
+                </div>
+                <div class="neox-field">
+                    <label for="neox-finderEffect">Effet &amp; dégradé</label>
+                    <div class="neox-inline">
+                        <select id="neox-finderEffect">
+                            <option value="none">Aucun</option>
+                            <option value="double_stroke">Double contour</option>
+                            <option value="dashed">Contour pointillé</option>
+                            <option value="shadow">Ombre portée</option>
+                            <option value="gradient">Dégradé</option>
+                        </select>
+                        <input type="color" id="neox-finderGradientTo" value="#00E5C9" title="Fin dégradé repères">
+                    </div>
+                </div>
+                <div class="neox-field">
+                    <label for="neox-finderIconHref">Icône des repères</label>
+                    <input type="text" id="neox-finderIconHref" placeholder="/images/icon.svg">
+                </div>
+            </div>
+        </details>
+
+        <details class="neox-section">
+            <summary>Alignement</summary>
+            <div class="neox-grid">
+                <div class="neox-field">
+                    <label for="neox-alignmentShape">Forme &amp; couleur</label>
+                    <div class="neox-inline">
+                        <select id="neox-alignmentShape">
+                            <option value="square">Square</option>
+                            <option value="rounded">Rounded</option>
+                            <option value="circle">Circle</option>
+                            <option value="diamond">Diamond</option>
+                            <option value="leaf">Leaf</option>
+                            <option value="dot">Dot</option>
+                        </select>
+                        <input type="color" id="neox-alignmentColor" value="#111111" title="Couleur alignement">
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details class="neox-section">
+            <summary>Cadre</summary>
+            <div class="neox-grid">
+                <div class="neox-field">
+                    <label for="neox-frameShape">Forme &amp; couleur</label>
+                    <div class="neox-inline">
+                        <select id="neox-frameShape">
+                            <option value="none">Aucun</option>
+                            <option value="circle">Cercle</option>
+                            <option value="rounded_square">Carré arrondi</option>
+                            <option value="heart">Cœur</option>
+                            <option value="star">Étoile</option>
+                            <option value="hexagon">Hexagone</option>
+                            <option value="security">Sécurité</option>
+                        </select>
+                        <input type="color" id="neox-frameColor" value="#ffffff" title="Couleur cadre">
+                    </div>
+                </div>
+                <div class="neox-field">
+                    <label for="neox-frameLabel">Label du cadre</label>
+                    <input type="text" id="neox-frameLabel" placeholder="Scan me">
+                </div>
+                <div class="neox-field"><label><input type="checkbox" id="neox-frameDecorative" checked> Décor de fond</label></div>
+                <div class="neox-field"><label for="neox-frameDecorativeOpacity">Opacité décor <span id="neox-frameDecorativeOpacity-value">0.60</span></label><input type="range" id="neox-frameDecorativeOpacity" min="0" max="1" step="0.05" value="0.6"></div>
+            </div>
+        </details>
+
+        <details class="neox-section">
+            <summary>Couleurs &amp; dégradés</summary>
+            <div class="neox-grid">
+                <div class="neox-field"><label for="neox-background">Fond</label><input type="color" id="neox-background" value="#ffffff"></div>
+                <div class="neox-field">
+                    <label for="neox-gradientType">Dégradé &amp; fin</label>
+                    <div class="neox-inline">
+                        <select id="neox-gradientType">
+                            <option value="none">Aucun</option>
+                            <option value="linear">Linéaire</option>
+                            <option value="radial">Radial</option>
+                        </select>
+                        <input type="color" id="neox-gradientTo" value="#D59618" title="Fin de dégradé">
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details class="neox-section">
+            <summary>Logo</summary>
+            <div class="neox-grid">
+                <div class="neox-field">
+                    <label for="neox-logoHref">Logo (URL locale ou data URI)</label>
+                    <input type="text" id="neox-logoHref" placeholder="/images/logo.svg">
+                </div>
+            </div>
+        </details>
+
+        <details class="neox-section">
+            <summary>Réglages avancés</summary>
+            <div class="neox-grid">
+                <div class="neox-field"><label for="neox-size">Taille (<span id="neox-size-value">360</span>px)</label><input type="range" id="neox-size" min="160" max="1024" step="16" value="360"></div>
+                <div class="neox-field"><label for="neox-margin">Marge (<span id="neox-margin-value">4</span>)</label><input type="range" id="neox-margin" min="0" max="12" value="4"></div>
+                <div class="neox-field"><label for="neox-moduleScale">Échelle modules</label><input type="range" id="neox-moduleScale" min="0.6" max="1" step="0.01" value="0.92"></div>
+                <div class="neox-field">
+                    <label for="neox-errorCorrection">Correction d'erreur</label>
+                    <select id="neox-errorCorrection">
+                        <option value="L">L</option>
+                        <option value="M">M</option>
+                        <option value="Q">Q</option>
+                        <option value="H" selected>H</option>
+                    </select>
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <section class="neox-preview-wrap">
+        <div class="neox-card neox-preview" id="neox-preview" aria-live="polite">
+            <div id="neox-preview-content">{{ initialSvg|raw }}</div>
+            <dl class="neox-meta" id="neox-meta"></dl>
+            <div class="neox-preview__loader"><div class="neox-preview__spinner"></div></div>
+        </div>
+        <div class="neox-actions">
+            <button type="button" class="neox-btn neox-btn--primary" id="neox-download-svg">Télécharger le SVG</button>
+            <button type="button" class="neox-btn neox-btn--primary" id="neox-download-png">Télécharger le PNG</button>
+            <button type="button" class="neox-btn" id="neox-copy-embed">Copier le composant Twig</button>
+        </div>
+        <div class="neox-status" id="neox-status"></div>
+    </section>
+</main>
+
+<script>
+(function () {
+    var endpoints = {
+        svg: {{ svgEndpoint|json_encode|raw }},
+        png: {{ pngEndpoint|json_encode|raw }},
+        validate: {{ validateEndpoint|json_encode|raw }},
+    };
+    var presetConfigs = {{ presetConfigs|json_encode|raw }};
+    var userPresets = {{ userPresets|json_encode|raw }};
+    var userPresetsEndpoint = {{ userPresetsEndpoint|json_encode|raw }};
+
+    var el = function (id) { return document.getElementById(id); };
+    var previewBox = el('neox-preview');
+    var preview = el('neox-preview-content');
+    var status = el('neox-status');
+    var selectedPreset = '';
+    var timer = null;
+    var requestId = 0;
+
+    var fields = [
+        'content', 'moduleShape', 'finderShape', 'alignmentShape', 'frameShape', 'frameLabel', 'frameColor', 'frameDecorative', 'frameDecorativeOpacity',
+        'foreground', 'background', 'finderColor', 'alignmentColor', 'gradientType', 'gradientTo',
+        'finderEffect', 'finderGradientTo', 'finderEyeShape', 'logoHref', 'finderIconHref',
+        'size', 'margin', 'moduleScale', 'errorCorrection',
+    ];
+
+    // Capture default values of all fields so we can reset them before applying a preset
+    var defaultValues = {};
+    fields.forEach(function (name) {
+        var node = el('neox-' + name);
+        if (!node) return;
+        defaultValues[name] = node.type === 'checkbox' ? node.checked : node.value;
+    });
+
+    function payload() {
+        return {
+            content: el('neox-content').value,
+            preset: selectedPreset || null,
+            size: Number(el('neox-size').value),
+            margin: Number(el('neox-margin').value),
+            moduleShape: el('neox-moduleShape').value,
+            finderShape: el('neox-finderShape').value,
+            foreground: el('neox-foreground').value,
+            background: el('neox-background').value,
+            finderColor: el('neox-finderColor').value,
+            alignmentShape: el('neox-alignmentShape').value,
+            alignmentColor: el('neox-alignmentColor').value,
+            moduleScale: Number(el('neox-moduleScale').value),
+            gradientType: el('neox-gradientType').value,
+            gradientTo: el('neox-gradientType').value !== 'none' ? el('neox-gradientTo').value : null,
+            logoHref: el('neox-logoHref').value || null,
+            finderIconHref: el('neox-finderIconHref').value || null,
+            finderEffect: el('neox-finderEffect').value,
+            finderGradientTo: el('neox-finderEffect').value === 'gradient' ? el('neox-finderGradientTo').value : null,
+            finderEyeShape: el('neox-finderEyeShape').value || null,
+            frameShape: el('neox-frameShape').value,
+            frameLabel: el('neox-frameLabel').value || null,
+            frameColor: el('neox-frameColor').value,
+            frameDecorative: el('neox-frameDecorative').checked,
+            frameDecorativeOpacity: Number(el('neox-frameDecorativeOpacity').value),
+            errorCorrection: el('neox-errorCorrection').value,
+        };
+    }
+
+    function setStatus(message, kind) {
+        status.textContent = message || '';
+        status.className = 'neox-status' + (kind ? ' is-' + kind : '');
+    }
+
+    function setActivePreset(name) {
+        selectedPreset = name || '';
+        document.querySelectorAll('.neox-preset').forEach(function (card) {
+            card.classList.toggle('is-active', (card.getAttribute('data-preset') || '') === selectedPreset);
+        });
+    }
+
+    function setLoading(isLoading) {
+        previewBox.classList.toggle('is-loading', isLoading);
+        [el('neox-download-svg'), el('neox-download-png')].forEach(function (btn) {
+            btn.disabled = isLoading;
+        });
+    }
+
+    function refresh() {
+        clearTimeout(timer);
+        setLoading(true);
+        timer = setTimeout(renderRemote, 150);
+    }
+
+    function renderRemote() {
+        el('neox-size-value').textContent = el('neox-size').value;
+        el('neox-margin-value').textContent = el('neox-margin').value;
+
+        var currentRequest = ++requestId;
+        setLoading(true);
+
+        fetch(endpoints.svg, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'image/svg+xml' },
+            body: JSON.stringify(payload()),
+        }).then(function (response) {
+            if (!response.ok) return response.text().then(function (t) { throw new Error(t); });
+            return response.text();
+        }).then(function (svg) {
+            if (currentRequest !== requestId) return;
+            preview.innerHTML = svg;
+            updateMeta();
+            checkValidation(currentRequest);
+        }).catch(function (error) {
+            if (currentRequest !== requestId) return;
+            setStatus(error.message || 'Impossible de générer le QR code.', 'error');
+            setLoading(false);
+        });
+    }
+
+    function checkValidation(currentRequest) {
+        if (selectedPreset) { setStatus(''); setLoading(false); return; }
+
+        fetch(endpoints.validate, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload()),
+        }).then(function (response) { return response.json(); }).then(function (data) {
+            if (currentRequest !== requestId) return;
+            if (data.errors && data.errors.length) {
+                setStatus(data.errors.join(' '), 'error');
+            } else if (data.warnings && data.warnings.length) {
+                setStatus(data.warnings.join(' '), 'warning');
+            } else {
+                setStatus('Contraste OK (' + data.contrastRatio + ':1)', 'ok');
+            }
+        }).catch(function () { setStatus(''); }).finally(function () {
+            if (currentRequest === requestId) setLoading(false);
+        });
+    }
+
+    function applyPresetConfig(name) {
+        var config = presetConfigs[name];
+        if (!config) return;
+        // Reset ALL fields to their defaults first, so leftover values from
+        // a previous preset don't bleed into the new one.
+        fields.forEach(function (f) {
+            var node = el('neox-' + f);
+            if (!node) return;
+            if (node.type === 'checkbox') {
+                node.checked = defaultValues[f];
+            } else {
+                node.value = defaultValues[f];
+            }
+        });
+        // Now apply the preset config on top of the reset values.
+        Object.keys(config).forEach(function (key) {
+            var node = el('neox-' + key);
+            if (!node) return;
+            var val = config[key];
+            if (node.type === 'checkbox') {
+                node.checked = val !== false;
+                return;
+            }
+            if (val === null || val === undefined) return;
+            node.value = val;
+        });
+        if (el('neox-size-value')) el('neox-size-value').textContent = el('neox-size').value;
+        if (el('neox-margin-value')) el('neox-margin-value').textContent = el('neox-margin').value;
+        if (el('neox-frameDecorativeOpacity-value')) el('neox-frameDecorativeOpacity-value').textContent = parseFloat(el('neox-frameDecorativeOpacity').value).toFixed(2);
+    }
+
+    function onFieldChange() {
+        if (selectedPreset) setActivePreset('');
+        refresh();
+    }
+
+    function updateMeta() {
+        var svgEl = preview.querySelector('svg');
+        var svgText = preview.innerHTML;
+        var svgBytes = new Blob([svgText]).size;
+        var w = svgEl ? (svgEl.getAttribute('width') || svgEl.viewBox.baseVal.width) : '—';
+        var h = svgEl ? (svgEl.getAttribute('height') || svgEl.viewBox.baseVal.height) : '—';
+        var moduleCount = (svgText.match(/<rect /g) || []).length;
+        var pathCount = (svgText.match(/<path /g) || []).length;
+        var circleCount = (svgText.match(/<circle /g) || []).length;
+        var defsCount = (svgText.match(/<defs>/g) || []).length;
+        var p = payload();
+        var items = [
+            ['Dimensions', w + ' × ' + h],
+            ['Poids SVG', svgBytes < 1024 ? svgBytes + ' o' : (svgBytes / 1024).toFixed(1) + ' Ko'],
+            ['Modules', moduleCount],
+            ['Paths', pathCount],
+            ['Cercles', circleCount],
+            ['Defs', defsCount],
+            ['EC', p.errorCorrection],
+            ['Forme', p.moduleShape],
+            ['Cadre', p.frameShape],
+            ['Preset', p.preset || '—'],
+        ];
+        var html = items.map(function (it) {
+            return '<div class="neox-meta__item"><dt>' + it[0] + '</dt><dd>' + it[1] + '</dd></div>';
+        }).join('');
+        el('neox-meta').innerHTML = html;
+    }
+
+    updateMeta();
+
+    function renderUserPresets() {
+        var container = el('neox-user-presets');
+        if (!container) return;
+        container.innerHTML = '';
+        Object.keys(userPresets).forEach(function (name) {
+            var chip = document.createElement('div');
+            chip.style.cssText = 'display:flex;align-items:center;gap:.25rem;background:var(--neox-panel-2);border:1px solid var(--neox-border);border-radius:6px;padding:.2rem .4rem;font-size:.72rem;cursor:pointer;';
+            var label = document.createElement('span');
+            label.textContent = name;
+            label.style.color = 'var(--neox-text)';
+            var del = document.createElement('button');
+            del.type = 'button';
+            del.textContent = '×';
+            del.style.cssText = 'background:none;border:none;color:var(--neox-danger);cursor:pointer;font-size:.85rem;padding:0;line-height:1;';
+            chip.appendChild(label);
+            chip.appendChild(del);
+            container.appendChild(chip);
+
+            chip.addEventListener('click', function (e) {
+                if (e.target === del) return;
+                var config = userPresets[name];
+                fields.forEach(function (f) {
+                    var node = el('neox-' + f);
+                    if (!node) return;
+                    if (node.type === 'checkbox') {
+                        node.checked = defaultValues[f];
+                    } else {
+                        node.value = defaultValues[f];
+                    }
+                });
+                Object.keys(config).forEach(function (key) {
+                    var node = el('neox-' + key);
+                    if (!node) return;
+                    var val = config[key];
+                    if (node.type === 'checkbox') {
+                        node.checked = val !== false;
+                        return;
+                    }
+                    if (val === null || val === undefined) return;
+                    node.value = val;
+                });
+                if (el('neox-size-value')) el('neox-size-value').textContent = el('neox-size').value;
+                if (el('neox-margin-value')) el('neox-margin-value').textContent = el('neox-margin').value;
+                if (el('neox-frameDecorativeOpacity-value')) el('neox-frameDecorativeOpacity-value').textContent = parseFloat(el('neox-frameDecorativeOpacity').value).toFixed(2);
+                selectedPreset = '';
+                document.querySelectorAll('.neox-preset').forEach(function (c) {
+                    c.classList.toggle('is-active', (c.getAttribute('data-preset') || '') === '');
+                });
+                refresh();
+            });
+
+            del.addEventListener('click', function (e) {
+                e.stopPropagation();
+                fetch(userPresetsEndpoint + '/' + encodeURIComponent(name), { method: 'DELETE' })
+                    .then(function () { delete userPresets[name]; renderUserPresets(); });
+            });
+        });
+    }
+
+    el('neox-save-preset').addEventListener('click', function () {
+        var name = el('neox-user-preset-name').value.trim();
+        if (!name) return;
+        fetch(userPresetsEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, config: payload() }),
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            if (data.error) { setStatus(data.error, 'error'); return; }
+            userPresets[name] = payload();
+            renderUserPresets();
+            el('neox-user-preset-name').value = '';
+            setStatus('Preset "' + name + '" sauvegardé.', 'ok');
+        });
+    });
+
+    renderUserPresets();
+
+    document.querySelectorAll('.neox-section').forEach(function (section) {
+        section.addEventListener('toggle', function () {
+            if (section.open) {
+                document.querySelectorAll('.neox-section').forEach(function (other) {
+                    if (other !== section && other.open) other.open = false;
+                });
+            }
+        });
+    });
+
+    fields.forEach(function (name) {
+        var node = el('neox-' + name);
+        if (!node) return;
+        node.addEventListener('input', onFieldChange);
+        node.addEventListener('change', onFieldChange);
+    });
+
+    document.querySelectorAll('.neox-preset').forEach(function (card) {
+        card.addEventListener('click', function () {
+            var name = card.getAttribute('data-preset') || '';
+            if (name) {
+                applyPresetConfig(name);
+                selectedPreset = '';
+                document.querySelectorAll('.neox-preset').forEach(function (c) {
+                    c.classList.toggle('is-active', (c.getAttribute('data-preset') || '') === name);
+                });
+            } else {
+                selectedPreset = '';
+                document.querySelectorAll('.neox-preset').forEach(function (c) {
+                    c.classList.toggle('is-active', c === card);
+                });
+            }
+            refresh();
+        });
+    });
+
+    el('neox-randomize').addEventListener('click', function () {
+        var samples = [
+            'https://neox.dev/produits/' + Math.random().toString(36).slice(2, 8),
+            'https://example.com/menu/' + Math.floor(Math.random() * 900 + 100),
+            'mailto:contact@neox.dev',
+            'WIFI:T:WPA;S:NeoxGuest;P:changeme123;;',
+            'tel:+33600000000',
+        ];
+        el('neox-content').value = samples[Math.floor(Math.random() * samples.length)];
+        refresh();
+    });
+
+    el('neox-download-svg').addEventListener('click', function () {
+        var svg = preview.querySelector('svg');
+        if (!svg) return;
+        downloadBlob(new Blob([svg.outerHTML], { type: 'image/svg+xml' }), 'qrcode.svg');
+    });
+
+    el('neox-download-png').addEventListener('click', function () {
+        var svgEl = preview.querySelector('svg');
+        if (!svgEl) return;
+        var svgText = new XMLSerializer().serializeToString(svgEl);
+        var size = 1024;
+        var img = new Image();
+        img.onload = function () {
+            var canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, size, size);
+            canvas.toBlob(function (blob) {
+                downloadBlob(blob, 'qrcode.png');
+            }, 'image/png');
+        };
+        img.onerror = function () { setStatus('Export PNG impossible.', 'error'); };
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+    });
+
+    el('neox-copy-embed').addEventListener('click', function () {
+        var p = payload();
+        var attrs = Object.keys(p)
+            .filter(function (k) { return p[k] !== null && k !== 'preset'; })
+            .map(function (k) { return '    ' + k + '="' + p[k] + '"'; })
+            .join('\n');
+        var snippet = '<' + 'twig:NeoxQrCode\n' + attrs + '\n/>';
+        navigator.clipboard.writeText(snippet).then(function () {
+            setStatus('Composant Twig copié dans le presse-papiers.', 'ok');
+        }).catch(function () {
+            setStatus('Copie impossible, votre navigateur bloque le presse-papiers.', 'error');
+        });
+    });
+
+    function downloadBlob(blob, filename) {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    renderRemote();
+})();
+</script>
+</body>
+</html>

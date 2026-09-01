@@ -1,0 +1,42 @@
+.neox-qrcode { display: flex; flex-direction: column; align-items: center; }
+.neox-qrcode__svg { display: grid; place-items: center; min-height: 200px; position: relative; }
+.neox-qrcode__svg svg { display: block; max-width: 100%; height: auto; }
+.neox-qrcode__svg.is-loading svg { opacity: .3; }
+.neox-qrcode__svg.is-loading::after {
+    content: ''; position: absolute; width: 32px; height: 32px;
+    border: 3px solid #ccc; border-top-color: #666; border-radius: 50%;
+    animation: neox-qr-spin .6s linear infinite;
+}
+@keyframes neox-qr-spin { to { transform: rotate(360deg); } }
+.neox-qrcode__selector { position: relative; margin-top: .5rem; display: inline-block; }
+.neox-qrcode__selector-btn {
+    font: inherit; font-size: .85rem; padding: .35rem .8rem; border: 1px solid #ccc;
+    border-radius: 6px; background: #f5f5f5; cursor: pointer; transition: background .15s;
+}
+.neox-qrcode__selector-btn:hover { background: #e8e8e8; }
+.neox-qrcode__popup {
+    position: absolute; bottom: 100%; left: 0; margin-bottom: .4rem;
+    background: #fff; border: 1px solid #ccc; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.15); padding: .4rem; z-index: 100;
+    max-height: 280px; overflow-y: auto; min-width: 160px;
+}
+.neox-qrcode__popup[hidden] { display: none; }
+.neox-qrcode__popup-list { display: grid; gap: .15rem; }
+.neox-qrcode__popup-item {
+    font: inherit; font-size: .82rem; text-align: left; padding: .3rem .6rem;
+    border: none; background: none; border-radius: 5px; cursor: pointer; transition: background .1s;
+}
+.neox-qrcode__popup-item:hover { background: #f0f0f0; }
+.neox-qrcode__popup-item.is-active { background: #e0e7ff; font-weight: 600; }
+.neox-qrcode__popup-item--user { color: #6366f1; }
+.neox-qrcode-editor { display: grid; grid-template-columns: minmax(260px, 360px) minmax(280px, 1fr); gap: 2rem; align-items: start; }
+.neox-qrcode-editor__controls { display: grid; gap: .8rem; }
+.neox-qrcode-editor__controls label { display: grid; gap: .35rem; font: inherit; }
+.neox-qrcode-editor__controls input,
+.neox-qrcode-editor__controls select,
+.neox-qrcode-editor__controls button { font: inherit; }
+.neox-qrcode-editor__preview { min-height: 320px; display: grid; place-items: center; }
+.neox-qrcode-editor__preview svg { max-width: 100%; height: auto; }
+.neox-qrcode-editor__actions { display: flex; gap: .5rem; }
+.neox-qrcode-editor__status { grid-column: 1 / -1; min-height: 1.5em; }
+@media (max-width: 760px) { .neox-qrcode-editor { grid-template-columns: 1fr; } }

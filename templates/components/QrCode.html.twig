@@ -1,0 +1,86 @@
+{% set uid = 'neox-qr-' ~ random() %}
+<style>
+.neox-qrcode{display:flex;flex-direction:column;align-items:center;gap:.6rem;font-family:system-ui,-apple-system,sans-serif;--nx-p:#6366f1;--nx-bg:#fff;--nx-t:#1e293b;--nx-m:#64748b;--nx-bd:#e2e8f0;--nx-tr:#f1f5f9;}
+.neox-qrcode__svg{display:grid;place-items:center;min-height:200px;position:relative;}
+.neox-qrcode__svg svg{display:block;max-width:100%;height:auto;}
+.neox-qrcode__svg.is-loading svg{opacity:.25;transition:opacity .2s;}
+.neox-qrcode__svg.is-loading::after{content:'';position:absolute;width:34px;height:34px;border:3px solid var(--nx-bd);border-top-color:var(--nx-p);border-radius:50%;animation:neox-qr-spin .7s linear infinite;}
+.neox-qrcode__actions{display:flex;gap:.35rem;}
+.neox-qrcode__action-btn{font-size:.75rem;font-weight:500;padding:.35rem .7rem;border:none;border-radius:20px;background:var(--nx-tr);color:var(--nx-m);cursor:pointer;transition:all .2s;}
+.neox-qrcode__action-btn:hover{background:var(--nx-p);color:#fff;}
+.neox-qrcode__preset-trigger{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:500;padding:.4rem .9rem;border:none;border-radius:20px;background:var(--nx-tr);color:var(--nx-m);cursor:pointer;transition:all .2s;}
+.neox-qrcode__preset-trigger:hover{background:#e0e7ff;color:var(--nx-p);}
+.neox-qrcode__preset-trigger .chevron{transition:transform .3s;font-size:.6rem;}
+.neox-qrcode__sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .3s;z-index:9998;}
+.neox-qrcode__sheet-overlay.is-open{opacity:1;pointer-events:auto;}
+.neox-qrcode__sheet{position:fixed;bottom:0;left:0;right:0;background:var(--nx-bg);border-radius:20px 20px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.15);transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);z-index:9999;max-height:60vh;overflow-y:auto;padding:1rem;}
+.neox-qrcode__sheet.is-open{transform:translateY(0);}
+.neox-qrcode__sheet-handle{width:36px;height:4px;background:var(--nx-bd);border-radius:4px;margin:0 auto .8rem;}
+.neox-qrcode__sheet-title{font-size:.85rem;font-weight:600;color:var(--nx-t);margin:0 0 .6rem;}
+.neox-qrcode__sheet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:.5rem;}
+.neox-qrcode__sheet-item{display:flex;flex-direction:column;align-items:center;gap:.3rem;padding:.6rem .4rem;border:2px solid var(--nx-bd);border-radius:12px;background:var(--nx-tr);color:var(--nx-m);cursor:pointer;transition:all .2s;font-size:.72rem;font-weight:500;}
+.neox-qrcode__sheet-item:hover{border-color:var(--nx-p);background:#e0e7ff;color:var(--nx-p);}
+.neox-qrcode__sheet-item.is-active{border-color:var(--nx-p);background:var(--nx-p);color:#fff;box-shadow:0 2px 12px rgba(99,102,241,.3);}
+.neox-qrcode__sheet-item--user{color:var(--nx-p);}
+.neox-qrcode__sheet-item--user.is-active{background:linear-gradient(135deg,#6366f1,#8b5cf6);border-color:#8b5cf6;}
+.neox-qrcode__sheet-item-dot{width:28px;height:28px;border-radius:50%;background:currentColor;opacity:.15;flex-shrink:0;}
+.neox-qrcode__sheet-item.is-active .neox-qrcode__sheet-item-dot{opacity:.4;background:#fff;}
+</style>
+<div class="neox-qrcode" id="{{ uid }}" data-content="{{ content|e('html_attr') }}" data-endpoint="{{ path('xorgxx_neox_qrcode_api_svg')|e('html_attr') }}">
+    <div class="neox-qrcode__svg" id="{{ uid }}-svg">{{ this.svg|raw }}</div>
+
+    <div class="neox-qrcode__actions">
+        <button type="button" class="neox-qrcode__action-btn" onclick="
+            var svgEl=document.getElementById('{{ uid }}-svg').querySelector('svg');
+            if(!svgEl)return;
+            var svgText=new XMLSerializer().serializeToString(svgEl);
+            var a=document.createElement('a');a.href='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgText);a.download='qrcode.svg';a.click();
+        ">⬇ SVG</button>
+        <button type="button" class="neox-qrcode__action-btn" onclick="
+            var svgEl=document.getElementById('{{ uid }}-svg').querySelector('svg');
+            if(!svgEl)return;
+            var svgText=new XMLSerializer().serializeToString(svgEl);
+            var img=new Image();
+            img.onload=function(){
+                var canvas=document.createElement('canvas');
+                canvas.width=1024;canvas.height=1024;
+                var ctx=canvas.getContext('2d');
+                ctx.drawImage(img,0,0,1024,1024);
+                canvas.toDataURL('image/png');
+                var a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='qrcode.png';a.click();
+            };
+            img.onerror=function(){console.error('PNG export failed')};
+            img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgText);
+        ">⬇ PNG</button>
+    </div>
+
+    <a href="{{ path('xorgxx_neox_qrcode_studio') }}" class="neox-qrcode__action-btn" style="text-decoration:none;display:inline-flex;align-items:center;">⚙ Studio</a>
+
+    {% if presetSelector %}
+    <button type="button" class="neox-qrcode__preset-trigger" id="{{ uid }}-trigger" onclick="var o=document.getElementById('{{ uid }}-overlay'),sh=document.getElementById('{{ uid }}-sheet');o.classList.add('is-open');sh.classList.add('is-open');">
+        Choix du preset <span class="chevron">▲</span>
+    </button>
+    <div class="neox-qrcode__sheet-overlay" id="{{ uid }}-overlay" onclick="this.classList.remove('is-open');document.getElementById('{{ uid }}-sheet').classList.remove('is-open');"></div>
+    <div class="neox-qrcode__sheet" id="{{ uid }}-sheet">
+        <div class="neox-qrcode__sheet-handle"></div>
+        <div class="neox-qrcode__sheet-title">Presets</div>
+        <div class="neox-qrcode__sheet-grid">
+            {% for name in this.builtinPresets %}
+                <button type="button"
+                    class="neox-qrcode__sheet-item{{ preset == name ? ' is-active' : '' }}"
+                    data-neox-preset="{{ name|e('html_attr') }}"
+                    onclick="var r=document.getElementById('{{ uid }}'),s=document.getElementById('{{ uid }}-svg'),o=document.getElementById('{{ uid }}-overlay'),sh=document.getElementById('{{ uid }}-sheet');sh.classList.remove('is-open');o.classList.remove('is-open');s.classList.add('is-loading');this.parentNode.querySelectorAll('.neox-qrcode__sheet-item').forEach(function(e){e.classList.remove('is-active')});this.classList.add('is-active');fetch(r.dataset.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'image/svg+xml'},body:JSON.stringify({content:r.dataset.content,preset:this.dataset.neoxPreset,errorCorrection:'H'})}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(v){s.innerHTML=v}).catch(function(e){console.error(e)}).finally(function(){s.classList.remove('is-loading')});"
+                ><span class="neox-qrcode__sheet-item-dot"></span>{{ name }}</button>
+            {% endfor %}
+            {% for name, entry in this.userPresets %}
+                <button type="button"
+                    class="neox-qrcode__sheet-item neox-qrcode__sheet-item--user{{ preset == name ? ' is-active' : '' }}"
+                    data-neox-preset="{{ name|e('html_attr') }}"
+                    data-neox-config="{{ entry.config|json_encode|e('html_attr') }}"
+                    onclick="var r=document.getElementById('{{ uid }}'),s=document.getElementById('{{ uid }}-svg'),o=document.getElementById('{{ uid }}-overlay'),sh=document.getElementById('{{ uid }}-sheet');sh.classList.remove('is-open');o.classList.remove('is-open');s.classList.add('is-loading');this.parentNode.querySelectorAll('.neox-qrcode__sheet-item').forEach(function(e){e.classList.remove('is-active')});this.classList.add('is-active');var c=JSON.parse(this.dataset.neoxConfig||'{}');c.content=r.dataset.content;c.preset=null;c.errorCorrection='H';fetch(r.dataset.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'image/svg+xml'},body:JSON.stringify(c)}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(v){s.innerHTML=v}).catch(function(e){console.error(e)}).finally(function(){s.classList.remove('is-loading')});"
+                ><span class="neox-qrcode__sheet-item-dot"></span>{{ name }} ★</button>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>

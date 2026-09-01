@@ -1,0 +1,120 @@
+<div
+    class="neox-qrcode-editor"
+    data-controller="neox-qrcode"
+    data-neox-qrcode-endpoint-value="{{ endpoint }}"
+    data-neox-qrcode-download-endpoint-value="{{ downloadEndpoint }}"
+>
+    <div class="neox-qrcode-editor__controls">
+        <label>Contenu
+            <input type="text" value="{{ content }}" data-neox-qrcode-target="content" data-action="input->neox-qrcode#refresh">
+        </label>
+
+        <label>Preset
+            <select data-neox-qrcode-target="preset" data-action="change->neox-qrcode#refresh">
+                <option value="">Personnalisé</option>
+                {% for preset in this.presets %}<option value="{{ preset }}">{{ preset }}</option>{% endfor %}
+            </select>
+        </label>
+
+        <label>Modules
+            <select data-neox-qrcode-target="moduleShape" data-action="change->neox-qrcode#refresh">
+                <option value="square">Square</option>
+                <option value="rounded">Rounded</option>
+                <option value="dot">Dots</option>
+                <option value="diamond">Diamond</option>
+                <option value="heart">Heart</option>
+                <option value="liquid">Liquid</option>
+            </select>
+        </label>
+
+        <label>Repères
+            <select data-neox-qrcode-target="finderShape" data-action="change->neox-qrcode#refresh">
+                <option value="square">Square</option>
+                <option value="rounded">Rounded</option>
+                <option value="circle">Circle</option>
+                <option value="diamond">Diamond</option>
+                <option value="leaf">Leaf</option>
+                <option value="hexagon">Hexagon</option>
+                <option value="star">Star</option>
+                <option value="dotted">Dotted</option>
+                <option value="minimal">Minimal</option>
+                <option value="inverted">Inverted</option>
+            </select>
+        </label>
+
+        <label>Effet repères
+            <select data-neox-qrcode-target="finderEffect" data-action="change->neox-qrcode#refresh">
+                <option value="none">Aucun</option>
+                <option value="double_stroke">Double contour</option>
+                <option value="dashed">Contour pointillé</option>
+                <option value="shadow">Ombre portée</option>
+                <option value="gradient">Dégradé</option>
+            </select>
+        </label>
+
+        <label>Forme de l'œil
+            <select data-neox-qrcode-target="finderEyeShape" data-action="change->neox-qrcode#refresh">
+                <option value="">Automatique</option>
+                <option value="square">Carré</option>
+                <option value="rounded">Carré arrondi</option>
+                <option value="circle">Rond</option>
+                <option value="diamond">Losange</option>
+                <option value="leaf">Feuille</option>
+                <option value="hexagon">Hexagone</option>
+                <option value="star">Étoile</option>
+            </select>
+        </label>
+
+        <label>Cadre
+            <select data-neox-qrcode-target="frameShape" data-action="change->neox-qrcode#refresh">
+                <option value="none">Aucun</option>
+                <option value="circle">Cercle</option>
+                <option value="rounded_square">Carré arrondi</option>
+                <option value="heart">Cœur</option>
+                <option value="star">Étoile</option>
+                <option value="hexagon">Hexagone</option>
+            </select>
+        </label>
+
+        <label>Alignement
+            <select data-neox-qrcode-target="alignmentShape" data-action="change->neox-qrcode#refresh">
+                <option value="square">Square</option>
+                <option value="rounded">Rounded</option>
+                <option value="circle">Circle</option>
+                <option value="diamond">Diamond</option>
+                <option value="leaf">Leaf</option>
+                <option value="dot">Dot</option>
+            </select>
+        </label>
+
+        <label>Couleur <input type="color" value="{{ this.defaults.foreground }}" data-neox-qrcode-target="foreground" data-action="input->neox-qrcode#refresh"></label>
+        <label>Fond <input type="color" value="{{ this.defaults.background }}" data-neox-qrcode-target="background" data-action="input->neox-qrcode#refresh"></label>
+        <label>Repères <input type="color" value="{{ this.defaults.finderColor }}" data-neox-qrcode-target="finderColor" data-action="input->neox-qrcode#refresh"></label>
+        <label>Align. <input type="color" value="{{ this.defaults.alignmentColor }}" data-neox-qrcode-target="alignmentColor" data-action="input->neox-qrcode#refresh"></label>
+        <label>Dégradé repères <input type="color" value="{{ this.defaults.finderColor }}" data-neox-qrcode-target="finderGradientTo" data-action="input->neox-qrcode#refresh"></label>
+
+        <label>Dégradé
+            <select data-neox-qrcode-target="gradientType" data-action="change->neox-qrcode#refresh">
+                <option value="none">Aucun</option>
+                <option value="linear">Linéaire</option>
+                <option value="radial">Radial</option>
+            </select>
+        </label>
+        <label>Fin dégradé <input type="color" value="{{ this.defaults.gradientTo }}" data-neox-qrcode-target="gradientTo" data-action="input->neox-qrcode#refresh"></label>
+
+        <label>Taille <input type="range" min="128" max="1024" step="16" value="{{ this.defaults.size }}" data-neox-qrcode-target="size" data-action="input->neox-qrcode#refresh"></label>
+        <label>Marge <input type="range" min="0" max="12" value="{{ this.defaults.margin }}" data-neox-qrcode-target="margin" data-action="input->neox-qrcode#refresh"></label>
+        <label>Échelle modules <input type="range" min="0.6" max="1" step="0.01" value="{{ this.defaults.moduleScale }}" data-neox-qrcode-target="moduleScale" data-action="input->neox-qrcode#refresh"></label>
+        <label>Logo URL locale/data URI <input type="text" placeholder="/images/logo.svg" data-neox-qrcode-target="logoHref" data-action="change->neox-qrcode#refresh"></label>
+        <label>Icône repères URL <input type="text" placeholder="/images/icon.svg" data-neox-qrcode-target="finderIconHref" data-action="change->neox-qrcode#refresh"></label>
+        <label>Label cadre <input type="text" placeholder="Scan me" data-neox-qrcode-target="frameLabel" data-action="change->neox-qrcode#refresh"></label>
+
+        <div class="neox-qrcode-editor__actions">
+            <button type="button" data-action="neox-qrcode#downloadSvg">SVG</button>
+            <button type="button" data-action="neox-qrcode#downloadPng">PNG</button>
+        </div>
+    </div>
+
+    <div class="neox-qrcode-editor__preview" data-neox-qrcode-target="preview" aria-live="polite"></div>
+    <div class="neox-qrcode-editor__status" data-neox-qrcode-target="status"></div>
+</div>

@@ -1,0 +1,5 @@
+xorgxx_neox_qrcode_api:
+    resource:
+        path: ../src/Controller/
+        namespace: Xorgxx\NeoxQrCodeBundle\Controller
+    type: attribute

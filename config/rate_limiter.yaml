@@ -1,0 +1,11 @@
+# config/rate_limiter.yaml
+# Import this in your app's config to enable API rate limiting:
+# imports:
+#     - { resource: '@NeoxQrCodeBundle/config/rate_limiter.yaml' }
+
+framework:
+    rate_limiter:
+        xorgxx_neox_qrcode_api:
+            policy: 'token_bucket'
+            limit: 60
+            rate: { interval: '1 minute', amount: 60 }

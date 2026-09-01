@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    Xorgxx\NeoxQrCodeBundle\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Enum/'
+            - '../src/Model/'
+            - '../src/NeoxQrCodeBundle.php'
+
+    Xorgxx\NeoxQrCodeBundle\Security\SingleUseTokenStoreInterface:
+        class: Xorgxx\NeoxQrCodeBundle\Security\CacheSingleUseTokenStore
+        arguments:
+            $cache: '@cache.app'
+
+    Xorgxx\NeoxQrCodeBundle\Security\SecureQrPayloadService:
+        arguments:
+            $secret: '%env(NEOX_QRCODE_SECRET)%'
+
+    Xorgxx\NeoxQrCodeBundle\Service\UserPresetStore:
+        arguments:
+            $storageDir: '%kernel.project_dir%/var/neox_qrcode'

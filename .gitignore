@@ -1,0 +1,11 @@
+/vendor/
+/var/
+/.phpunit.cache/
+/.idea/
+/.vscode/
+/node_modules/
+
+# Debug/temp files
+debug_export.php
+*_debug_export.*
+/AGENTS.md

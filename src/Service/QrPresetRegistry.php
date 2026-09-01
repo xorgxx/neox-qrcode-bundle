@@ -42,13 +42,13 @@ final class QrPresetRegistry
                 'frame' => new QrFrameStyle(shape: FrameShape::Heart, frameColor: '#ffffff', decorative: true),
             ],
             'gold' => ['style' => new QrStyle(moduleShape: ModuleShape::Dot, finderShape: FinderShape::Rounded, foreground: '#111111', finderColor: '#D59618')],
-//            'gradient' => ['style' => new QrStyle(moduleShape: ModuleShape::Rounded, finderShape: FinderShape::Rounded, foreground: '#111111', gradientType: GradientType::Linear, gradientTo: '#D59618')],
-//            'minimal' => ['style' => new QrStyle(moduleShape: ModuleShape::Dot, finderShape: FinderShape::Minimal, moduleScale: 0.82, foreground: '#111111')],
-//            'inverted' => ['style' => new QrStyle(moduleShape: ModuleShape::Rounded, finderShape: FinderShape::Inverted, foreground: '#111111', finderColor: '#111111')],
-//            'star' => ['style' => new QrStyle(moduleShape: ModuleShape::Diamond, finderShape: FinderShape::Star, foreground: '#111111', finderColor: '#D59618')],
-//            'outline' => ['style' => new QrStyle(moduleShape: ModuleShape::Square, finderShape: FinderShape::Rounded, foreground: '#111111', finderEffect: FinderEffect::DoubleStroke)],
-//            'stitched' => ['style' => new QrStyle(moduleShape: ModuleShape::Rounded, finderShape: FinderShape::Rounded, foreground: '#111111', finderEffect: FinderEffect::Dashed)],
-//            'floating' => ['style' => new QrStyle(moduleShape: ModuleShape::Rounded, finderShape: FinderShape::Rounded, foreground: '#111111', finderEffect: FinderEffect::Shadow)],
+            //            'gradient' => ['style' => new QrStyle(moduleShape: ModuleShape::Rounded, finderShape: FinderShape::Rounded, foreground: '#111111', gradientType: GradientType::Linear, gradientTo: '#D59618')],
+            //            'minimal' => ['style' => new QrStyle(moduleShape: ModuleShape::Dot, finderShape: FinderShape::Minimal, moduleScale: 0.82, foreground: '#111111')],
+            //            'inverted' => ['style' => new QrStyle(moduleShape: ModuleShape::Rounded, finderShape: FinderShape::Inverted, foreground: '#111111', finderColor: '#111111')],
+            //            'star' => ['style' => new QrStyle(moduleShape: ModuleShape::Diamond, finderShape: FinderShape::Star, foreground: '#111111', finderColor: '#D59618')],
+            //            'outline' => ['style' => new QrStyle(moduleShape: ModuleShape::Square, finderShape: FinderShape::Rounded, foreground: '#111111', finderEffect: FinderEffect::DoubleStroke)],
+            //            'stitched' => ['style' => new QrStyle(moduleShape: ModuleShape::Rounded, finderShape: FinderShape::Rounded, foreground: '#111111', finderEffect: FinderEffect::Dashed)],
+            //            'floating' => ['style' => new QrStyle(moduleShape: ModuleShape::Rounded, finderShape: FinderShape::Rounded, foreground: '#111111', finderEffect: FinderEffect::Shadow)],
             'neon' => [
                 'style' => new QrStyle(
                     moduleShape: ModuleShape::Dot,
@@ -159,6 +159,6 @@ final class QrPresetRegistry
 
     public function register(string $name, QrStyle $style, ?QrFrameStyle $frame = null): void
     {
-        $this->presets[$name] = $frame !== null ? ['style' => $style, 'frame' => $frame] : ['style' => $style];
+        $this->presets[$name] = null !== $frame ? ['style' => $style, 'frame' => $frame] : ['style' => $style];
     }
 }

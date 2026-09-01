@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Xorgxx\NeoxQrCodeBundle\Enum\AlignmentShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\ErrorCorrection;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderShape;
@@ -15,7 +16,6 @@ use Xorgxx\NeoxQrCodeBundle\Service\QrMatrixGenerator;
 use Xorgxx\NeoxQrCodeBundle\Service\QrPresetRegistry;
 use Xorgxx\NeoxQrCodeBundle\Service\QrStyleValidator;
 use Xorgxx\NeoxQrCodeBundle\Service\ShapeRegistry;
-use PHPUnit\Framework\TestCase;
 
 final class QrCodeGeneratorTest extends TestCase
 {
@@ -23,7 +23,7 @@ final class QrCodeGeneratorTest extends TestCase
 
     protected function setUp(): void
     {
-        $shapes = new \Xorgxx\NeoxQrCodeBundle\Service\ShapeRegistry();
+        $shapes = new ShapeRegistry();
         $svgRenderer = new \Xorgxx\NeoxQrCodeBundle\Renderer\SvgRenderer($shapes);
         $this->generator = new QrCodeGenerator(
             new QrMatrixGenerator(),
@@ -78,7 +78,7 @@ final class QrCodeGeneratorTest extends TestCase
         $result = $this->generator->generate('test', $style);
 
         self::assertStringContainsString('linearGradient', $result->svg);
-        self::assertStringContainsString('url(#neoxQrGradient)', $result->svg);
+        self::assertStringContainsString('url(#neoxQrGradient_', $result->svg);
     }
 
     public function testGenerateWithRadialGradient(): void

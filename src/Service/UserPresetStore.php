@@ -33,6 +33,7 @@ final class UserPresetStore
         if (!isset($data[$name])) {
             throw new \InvalidArgumentException(sprintf('Unknown user preset "%s".', $name));
         }
+
         return $data[$name]['config'];
     }
 
@@ -42,7 +43,7 @@ final class UserPresetStore
     public function save(string $name, array $config): void
     {
         $name = trim($name);
-        if ($name === '') {
+        if ('' === $name) {
             throw new \InvalidArgumentException('Preset name cannot be empty.');
         }
         if (mb_strlen($name) > 60) {
@@ -68,17 +69,19 @@ final class UserPresetStore
      */
     private function load(): array
     {
-        if ($this->cache !== null) {
+        if (null !== $this->cache) {
             return $this->cache;
         }
         $path = $this->path();
         if (!is_file($path)) {
             $this->cache = [];
+
             return $this->cache;
         }
         $raw = file_get_contents($path);
         $data = json_decode($raw ?: '[]', true);
         $this->cache = is_array($data) ? $data : [];
+
         return $this->cache;
     }
 
@@ -88,7 +91,7 @@ final class UserPresetStore
     private function persist(array $data): void
     {
         if (!is_dir($this->storageDir)) {
-            mkdir($this->storageDir, 0775, true);
+            mkdir($this->storageDir, 0o775, true);
         }
         file_put_contents($this->path(), json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
         $this->cache = $data;
@@ -96,6 +99,6 @@ final class UserPresetStore
 
     private function path(): string
     {
-        return rtrim($this->storageDir, '/\\') . DIRECTORY_SEPARATOR . self::FILENAME;
+        return rtrim($this->storageDir, '/\\').DIRECTORY_SEPARATOR.self::FILENAME;
     }
 }

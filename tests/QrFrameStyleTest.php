@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Xorgxx\NeoxQrCodeBundle\Enum\FrameShape;
 use Xorgxx\NeoxQrCodeBundle\Model\QrFrameStyle;
-use PHPUnit\Framework\TestCase;
 
 final class QrFrameStyleTest extends TestCase
 {

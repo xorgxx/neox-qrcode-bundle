@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Controller;
 
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 use Xorgxx\NeoxQrCodeBundle\Enum\AlignmentShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\ErrorCorrection;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderEffect;
@@ -18,12 +23,6 @@ use Xorgxx\NeoxQrCodeBundle\Service\QrCodeGenerator;
 use Xorgxx\NeoxQrCodeBundle\Service\QrPresetRegistry;
 use Xorgxx\NeoxQrCodeBundle\Service\QrStyleValidator;
 use Xorgxx\NeoxQrCodeBundle\Service\UserPresetStore;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\RateLimiter\Attribute\RateLimiter;
-use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/qrcode', name: 'xorgxx_neox_qrcode_api_')]
 final class QrCodeApiController extends AbstractController
@@ -37,12 +36,11 @@ final class QrCodeApiController extends AbstractController
     }
 
     #[Route('/svg', name: 'svg', methods: ['POST'])]
-    #[RateLimiter('xorgxx_neox_qrcode_api')]
     public function svg(Request $request): Response
     {
         try {
             [$content, $style, $ec, $preset, $frame] = $this->payload($request);
-            $result = $preset !== null
+            $result = null !== $preset
                 ? $this->generator->generatePreset($content, $preset, $ec)
                 : $this->generator->generate($content, $style, $ec, $frame);
 
@@ -57,12 +55,11 @@ final class QrCodeApiController extends AbstractController
     }
 
     #[Route('/png', name: 'png', methods: ['POST'])]
-    #[RateLimiter('xorgxx_neox_qrcode_api')]
     public function png(Request $request): Response
     {
         try {
             [$content, $style, $ec, $preset, $frame] = $this->payload($request);
-            $result = $preset !== null
+            $result = null !== $preset
                 ? $this->generator->generatePreset($content, $preset, $ec)
                 : $this->generator->generate($content, $style, $ec, $frame);
 
@@ -77,12 +74,11 @@ final class QrCodeApiController extends AbstractController
     }
 
     #[Route('/matrix', name: 'matrix', methods: ['POST'])]
-    #[RateLimiter('xorgxx_neox_qrcode_api')]
     public function matrix(Request $request): JsonResponse
     {
         try {
             [$content, $style, $ec, $preset, $frame] = $this->payload($request);
-            $result = $preset !== null
+            $result = null !== $preset
                 ? $this->generator->generatePreset($content, $preset, $ec)
                 : $this->generator->generate($content, $style, $ec, $frame);
 
@@ -97,7 +93,6 @@ final class QrCodeApiController extends AbstractController
     }
 
     #[Route('/validate', name: 'validate', methods: ['POST'])]
-    #[RateLimiter('xorgxx_neox_qrcode_api')]
     public function validate(Request $request): JsonResponse
     {
         try {
@@ -135,6 +130,7 @@ final class QrCodeApiController extends AbstractController
         $config = $data['config'] ?? [];
         try {
             $store->save($name, $config);
+
             return $this->json(['ok' => true]);
         } catch (\Throwable $e) {
             return $this->json(['error' => $e->getMessage()], 422);
@@ -145,6 +141,7 @@ final class QrCodeApiController extends AbstractController
     public function userPresetsDelete(string $name, UserPresetStore $store): JsonResponse
     {
         $store->delete($name);
+
         return $this->json(['ok' => true]);
     }
 
@@ -153,7 +150,7 @@ final class QrCodeApiController extends AbstractController
     {
         $data = $request->toArray();
         $content = trim((string) ($data['content'] ?? ''));
-        $preset = isset($data['preset']) && $data['preset'] !== '' ? (string) $data['preset'] : null;
+        $preset = isset($data['preset']) && '' !== $data['preset'] ? (string) $data['preset'] : null;
 
         $style = new QrStyle(
             size: (int) ($data['size'] ?? 320),
@@ -175,19 +172,19 @@ final class QrCodeApiController extends AbstractController
             finderIconScale: (float) ($data['finderIconScale'] ?? 0.6),
             finderEffect: FinderEffect::from((string) ($data['finderEffect'] ?? 'none')),
             finderGradientTo: isset($data['finderGradientTo']) ? (string) $data['finderGradientTo'] : null,
-            finderCenterShape: isset($data['finderCenterShape']) && $data['finderCenterShape'] !== ''
+            finderCenterShape: isset($data['finderCenterShape']) && '' !== $data['finderCenterShape']
                 ? ModuleShape::from((string) $data['finderCenterShape'])
                 : null,
-            finderEyeShape: isset($data['finderEyeShape']) && $data['finderEyeShape'] !== ''
+            finderEyeShape: isset($data['finderEyeShape']) && '' !== $data['finderEyeShape']
                 ? FinderShape::from((string) $data['finderEyeShape'])
                 : null,
         );
 
         $frameShape = FrameShape::from((string) ($data['frameShape'] ?? 'none'));
-        $frame = $frameShape !== FrameShape::None || isset($data['frameLabel'])
+        $frame = FrameShape::None !== $frameShape || isset($data['frameLabel'])
             ? new QrFrameStyle(
                 shape: $frameShape,
-                label: isset($data['frameLabel']) && $data['frameLabel'] !== '' ? (string) $data['frameLabel'] : null,
+                label: isset($data['frameLabel']) && '' !== $data['frameLabel'] ? (string) $data['frameLabel'] : null,
                 labelColor: isset($data['frameLabelColor']) ? (string) $data['frameLabelColor'] : null,
                 frameColor: isset($data['frameColor']) ? (string) $data['frameColor'] : null,
                 decorative: (bool) ($data['frameDecorative'] ?? true),

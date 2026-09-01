@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Controller;
 
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 use Xorgxx\NeoxQrCodeBundle\Model\QrStyle;
 use Xorgxx\NeoxQrCodeBundle\Service\QrCodeGenerator;
 use Xorgxx\NeoxQrCodeBundle\Service\QrPresetRegistry;
 use Xorgxx\NeoxQrCodeBundle\Service\UserPresetStore;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
 
 final class QrCodeStudioController extends AbstractController
 {
@@ -57,8 +57,8 @@ final class QrCodeStudioController extends AbstractController
                     'frameLabel' => $frame?->label,
                     'frameLabelColor' => $frame?->labelColor,
                     'frameColor' => $frame?->frameColor,
-                    'frameDecorative' => $frame?->decorative ?? true,
-                    'frameDecorativeOpacity' => $frame?->decorativeOpacity ?? 0.6,
+                    'frameDecorative' => null !== $frame ? $frame->decorative : true,
+                    'frameDecorativeOpacity' => null !== $frame ? $frame->decorativeOpacity : 0.6,
                 ];
             } catch (\Throwable) {
                 continue;

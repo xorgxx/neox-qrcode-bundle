@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Xorgxx\NeoxQrCodeBundle\Enum\ErrorCorrection;
 use Xorgxx\NeoxQrCodeBundle\Service\QrMatrixGenerator;
-use PHPUnit\Framework\TestCase;
 
 final class QrMatrixGeneratorTest extends TestCase
 {

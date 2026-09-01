@@ -1,5 +1,7 @@
 # Neox QR Code documentation
 
+![Custom QR Code](custome-3.png)
+
 Neox QR Code intentionally separates **QR encoding** from **visual rendering** and from **secure payloads**.
 
 ## Language / Langue

@@ -50,10 +50,10 @@ final readonly class SecureQrPayloadService
             throw new \InvalidArgumentException('QR token has expired.');
         }
 
-        $singleUse = (bool) ($payload['one'] ?? false);
+        $singleUse = $payload['one'];
         $jti = isset($payload['jti']) ? (string) $payload['jti'] : null;
 
-        if ($singleUse && $jti !== null) {
+        if ($singleUse && null !== $jti) {
             if ($consume) {
                 if (!$this->tokenStore->consume($jti)) {
                     throw new \InvalidArgumentException('QR token has already been used.');
@@ -64,7 +64,7 @@ final readonly class SecureQrPayloadService
         }
 
         return new SecureQrPayload(
-            data: $payload['data'] ?? [],
+            data: $payload['data'],
             expiresAt: $payload['exp'] ?? null,
             jti: $jti,
             singleUse: $singleUse,
@@ -108,7 +108,7 @@ final readonly class SecureQrPayloadService
         $key = hash('sha256', $this->secret, true);
         $plain = sodium_crypto_secretbox_open($cipher, $nonce, $key);
 
-        if ($plain === false) {
+        if (false === $plain) {
             throw new \InvalidArgumentException('Unable to decrypt QR token.');
         }
 
@@ -118,14 +118,14 @@ final readonly class SecureQrPayloadService
             throw new \InvalidArgumentException('QR token has expired.');
         }
 
-        return $payload['data'] ?? [];
+        return $payload['data'];
     }
 
     /** @return array{string,string} */
     private function splitToken(string $token): array
     {
         $parts = explode('.', $token, 2);
-        if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
+        if (2 !== count($parts) || '' === $parts[0] || '' === $parts[1]) {
             throw new \InvalidArgumentException('Malformed QR token.');
         }
 
@@ -140,12 +140,12 @@ final readonly class SecureQrPayloadService
     private function base64UrlDecode(string $value): string
     {
         $padding = strlen($value) % 4;
-        if ($padding !== 0) {
+        if (0 !== $padding) {
             $value .= str_repeat('=', 4 - $padding);
         }
 
         $decoded = base64_decode(strtr($value, '-_', '+/'), true);
-        if ($decoded === false) {
+        if (false === $decoded) {
             throw new \InvalidArgumentException('Invalid base64url payload.');
         }
 

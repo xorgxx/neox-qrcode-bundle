@@ -30,8 +30,8 @@ final class QrStyleValidator
             $warnings[] = 'Small modules can reduce scan reliability.';
         }
 
-        if ($style->logoHref !== null) {
-            if ($errorCorrection !== ErrorCorrection::High) {
+        if (null !== $style->logoHref) {
+            if (ErrorCorrection::High !== $errorCorrection) {
                 $warnings[] = 'Use error correction H when displaying a central logo.';
             }
             if ($style->logoScale > 0.24) {
@@ -39,7 +39,7 @@ final class QrStyleValidator
             }
         }
 
-        return new QrValidationReport($errors === [], $errors, $warnings, $ratio);
+        return new QrValidationReport([] === $errors, $errors, $warnings, $ratio);
     }
 
     private function contrastRatio(string $a, string $b): float

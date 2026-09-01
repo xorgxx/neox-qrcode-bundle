@@ -18,19 +18,22 @@ final class CacheSingleUseTokenStore implements SingleUseTokenStoreInterface
 
     public function consume(string $jti): bool
     {
-        $key = self::PREFIX . hash('sha256', $jti);
-        $alreadyConsumed = $this->cache->get($key, static function (ItemInterface $item): bool {
+        $key = self::PREFIX.hash('sha256', $jti);
+        $alreadyConsumed = (bool) $this->cache->get($key, static function (ItemInterface $item): bool {
             $item->expiresAfter(31536000);
+
             return false;
         });
 
-        if ($alreadyConsumed === true) {
+        // @phpstan-ignore-next-line if.alwaysFalse (cache may return true on subsequent calls)
+        if ($alreadyConsumed) {
             return false;
         }
 
         $this->cache->delete($key);
         $this->cache->get($key, static function (ItemInterface $item): bool {
             $item->expiresAfter(31536000);
+
             return true;
         });
 
@@ -39,11 +42,12 @@ final class CacheSingleUseTokenStore implements SingleUseTokenStoreInterface
 
     public function isConsumed(string $jti): bool
     {
-        $key = self::PREFIX . hash('sha256', $jti);
+        $key = self::PREFIX.hash('sha256', $jti);
 
-        return $this->cache->get($key, static function (ItemInterface $item): bool {
+        return (bool) $this->cache->get($key, static function (ItemInterface $item): bool {
             $item->expiresAfter(31536000);
+
             return false;
-        }) === true;
+        });
     }
 }

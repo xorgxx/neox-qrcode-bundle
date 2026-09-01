@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Xorgxx\NeoxQrCodeBundle\Enum\ErrorCorrection;
 use Xorgxx\NeoxQrCodeBundle\Model\QrStyle;
 use Xorgxx\NeoxQrCodeBundle\Service\QrStyleValidator;
-use PHPUnit\Framework\TestCase;
 
 final class QrStyleValidatorTest extends TestCase
 {

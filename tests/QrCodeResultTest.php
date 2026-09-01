@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Xorgxx\NeoxQrCodeBundle\Model\QrCodeResult;
 use Xorgxx\NeoxQrCodeBundle\Model\QrMatrix;
-use PHPUnit\Framework\TestCase;
 
 final class QrCodeResultTest extends TestCase
 {

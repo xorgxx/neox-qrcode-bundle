@@ -52,24 +52,24 @@ final readonly class QrStyle
         }
 
         foreach ([$foreground, $background, $finderColor, $gradientTo, $alignmentColor, $finderGradientTo] as $color) {
-            if ($color !== null && !preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
+            if (null !== $color && !preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
                 throw new \InvalidArgumentException(sprintf('Invalid color "%s".', $color));
             }
         }
 
-        if ($gradientType !== GradientType::None && $gradientTo === null) {
+        if (GradientType::None !== $gradientType && null === $gradientTo) {
             throw new \InvalidArgumentException('gradientTo is required when a gradient is enabled.');
         }
 
-        if ($finderEffect === FinderEffect::Gradient && $finderGradientTo === null) {
+        if (FinderEffect::Gradient === $finderEffect && null === $finderGradientTo) {
             throw new \InvalidArgumentException('finderGradientTo is required when finderEffect is gradient.');
         }
 
-        if ($logoHref !== null && !$this->isSafeImageHref($logoHref)) {
+        if (null !== $logoHref && !$this->isSafeImageHref($logoHref)) {
             throw new \InvalidArgumentException('logoHref must be an application-relative URL (/...) or an image data URI.');
         }
 
-        if ($finderIconHref !== null && !$this->isSafeImageHref($finderIconHref)) {
+        if (null !== $finderIconHref && !$this->isSafeImageHref($finderIconHref)) {
             throw new \InvalidArgumentException('finderIconHref must be an application-relative URL (/...) or an image data URI.');
         }
     }
@@ -77,6 +77,6 @@ final readonly class QrStyle
     private function isSafeImageHref(string $href): bool
     {
         return str_starts_with($href, '/')
-            || preg_match('#^data:image/(png|jpeg|webp|gif|svg\+xml);#i', $href) === 1;
+            || 1 === preg_match('#^data:image/(png|jpeg|webp|gif|svg\+xml);#i', $href);
     }
 }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Tests;
 
-use Xorgxx\NeoxQrCodeBundle\Renderer\PngRenderer;
 use PHPUnit\Framework\TestCase;
+use Xorgxx\NeoxQrCodeBundle\Renderer\PngRenderer;
 
 final class PngRendererTest extends TestCase
 {

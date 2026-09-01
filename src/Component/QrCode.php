@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Component;
 
+use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 use Xorgxx\NeoxQrCodeBundle\Enum\AlignmentShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\ErrorCorrection;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderEffect;
@@ -16,7 +17,6 @@ use Xorgxx\NeoxQrCodeBundle\Model\QrStyle;
 use Xorgxx\NeoxQrCodeBundle\Service\QrCodeGenerator;
 use Xorgxx\NeoxQrCodeBundle\Service\QrPresetRegistry;
 use Xorgxx\NeoxQrCodeBundle\Service\UserPresetStore;
-use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
 #[AsTwigComponent(name: 'NeoxQrCode', template: '@NeoxQrCode/components/QrCode.html.twig')]
 final class QrCode
@@ -59,9 +59,10 @@ final class QrCode
         private readonly UserPresetStore $userPresetStore,
     ) {
     }
+
     public function getSvg(): string
     {
-        if ($this->preset !== null) {
+        if (null !== $this->preset) {
             return $this->generator->generatePreset(
                 $this->content,
                 $this->preset,
@@ -89,11 +90,11 @@ final class QrCode
             finderGradientTo: $this->finderGradientTo,
             alignmentShape: AlignmentShape::from($this->alignmentShape),
             alignmentColor: $this->alignmentColor,
-            finderEyeShape: $this->finderEyeShape !== null && $this->finderEyeShape !== '' ? FinderShape::from($this->finderEyeShape) : null,
+            finderEyeShape: null !== $this->finderEyeShape && '' !== $this->finderEyeShape ? FinderShape::from($this->finderEyeShape) : null,
         );
 
         $frameShape = FrameShape::from($this->frameShape);
-        $frame = $frameShape !== FrameShape::None || $this->frameLabel !== null
+        $frame = FrameShape::None !== $frameShape || null !== $this->frameLabel
             ? new QrFrameStyle($frameShape, $this->frameLabel, $this->frameLabelColor, $this->frameColor, $this->frameDecorative, $this->frameDecorativeOpacity)
             : null;
 

@@ -13,7 +13,7 @@ final class QrMatrixGenerator
     public function generate(string $content, ErrorCorrection $errorCorrection = ErrorCorrection::High): QrMatrix
     {
         $content = trim($content);
-        if ($content === '') {
+        if ('' === $content) {
             throw new \InvalidArgumentException('QR content cannot be empty.');
         }
         if (mb_strlen($content) > 4096) {

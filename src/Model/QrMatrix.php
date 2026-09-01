@@ -10,7 +10,7 @@ final readonly class QrMatrix
     public function __construct(public array $cells)
     {
         $size = count($cells);
-        if ($size === 0 || $size !== count($cells[0] ?? [])) {
+        if (0 === $size || $size !== count($cells[0])) {
             throw new \InvalidArgumentException('QR matrix must be a non-empty square matrix.');
         }
 

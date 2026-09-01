@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Tests;
 
-use Xorgxx\NeoxQrCodeBundle\Security\CacheSingleUseTokenStore;
-use Xorgxx\NeoxQrCodeBundle\Security\SecureQrPayloadService;
-use Xorgxx\NeoxQrCodeBundle\Security\SingleUseTokenStoreInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Xorgxx\NeoxQrCodeBundle\Security\CacheSingleUseTokenStore;
+use Xorgxx\NeoxQrCodeBundle\Security\SecureQrPayloadService;
+use Xorgxx\NeoxQrCodeBundle\Security\SingleUseTokenStoreInterface;
 
 final class SecureQrPayloadServiceTest extends TestCase
 {
@@ -63,7 +63,7 @@ final class SecureQrPayloadServiceTest extends TestCase
 
         $token = $service->sign(['data' => 'test']);
         $parts = explode('.', $token);
-        $tampered = $parts[0] . '.invalidSignature';
+        $tampered = $parts[0].'.invalidSignature';
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid QR signature');
@@ -265,6 +265,7 @@ final class SecureQrPayloadServiceTest extends TestCase
 
 final class InMemoryTokenStore implements SingleUseTokenStoreInterface
 {
+    /** @var array<string, bool> */
     private array $consumed = [];
 
     public function consume(string $jti): bool
@@ -286,15 +287,18 @@ final class InMemoryTokenStore implements SingleUseTokenStoreInterface
 
 final class InMemoryCache implements CacheInterface
 {
+    /** @var array<string, mixed> */
     private array $data = [];
 
+    /** @param array<string, mixed>|null $metadata */
     public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed
     {
         if (array_key_exists($key, $this->data)) {
             return $this->data[$key];
         }
 
-        $value = $callback($this->createItem($key));
+        $save = true;
+        $value = $callback($this->createItem($key), $save);
         $this->data[$key] = $value;
 
         return $value;
@@ -354,6 +358,7 @@ final class InMemoryCacheItem implements ItemInterface
         return $this;
     }
 
+    /** @return array<string, mixed> */
     public function getMetadata(): array
     {
         return [];

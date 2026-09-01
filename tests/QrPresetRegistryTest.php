@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Xorgxx\NeoxQrCodeBundle\Model\QrStyle;
 use Xorgxx\NeoxQrCodeBundle\Service\QrPresetRegistry;
-use PHPUnit\Framework\TestCase;
 
 final class QrPresetRegistryTest extends TestCase
 {
@@ -65,8 +65,9 @@ final class QrPresetRegistryTest extends TestCase
         $registry = new QrPresetRegistry();
 
         $config = $registry->get('liquid-security');
-        self::assertArrayHasKey('frame', $config);
-        self::assertSame(\Xorgxx\NeoxQrCodeBundle\Enum\FrameShape::Security, $config['frame']->shape);
+        $frame = $config['frame'] ?? null;
+        self::assertNotNull($frame);
+        self::assertSame(\Xorgxx\NeoxQrCodeBundle\Enum\FrameShape::Security, $frame->shape);
     }
 
     public function testLiquidHeartHasFrame(): void
@@ -74,9 +75,10 @@ final class QrPresetRegistryTest extends TestCase
         $registry = new QrPresetRegistry();
 
         $config = $registry->get('liquid-heart');
-        self::assertArrayHasKey('frame', $config);
-        self::assertSame(\Xorgxx\NeoxQrCodeBundle\Enum\FrameShape::Heart, $config['frame']->shape);
-        self::assertTrue($config['frame']->decorative);
+        $frame = $config['frame'] ?? null;
+        self::assertNotNull($frame);
+        self::assertSame(\Xorgxx\NeoxQrCodeBundle\Enum\FrameShape::Heart, $frame->shape);
+        self::assertTrue($frame->decorative);
     }
 
     public function testGetUnknownThrows(): void
@@ -90,7 +92,7 @@ final class QrPresetRegistryTest extends TestCase
     public function testRegisterCustomPreset(): void
     {
         $registry = new QrPresetRegistry();
-        $style = new \Xorgxx\NeoxQrCodeBundle\Model\QrStyle();
+        $style = new QrStyle();
         $registry->register('custom', $style);
 
         self::assertContains('custom', $registry->names());

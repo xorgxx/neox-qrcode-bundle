@@ -20,7 +20,7 @@ final readonly class FrameRenderer
     {
         [$content, $view] = $this->svgRenderer->renderContent($matrix, $style);
 
-        if ($frame->shape === FrameShape::None) {
+        if (FrameShape::None === $frame->shape) {
             return sprintf(
                 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %1$d %1$d" width="%2$d" height="%2$d" role="img" aria-label="QR Code">%3$s</svg>',
                 $view,
@@ -34,8 +34,8 @@ final readonly class FrameRenderer
         $margin = ($view - $qrArea) / 2;
         $vOffset = $view * $this->verticalOffset($frame->shape);
 
-        $labelHeight = $frame->label !== null ? $view * 0.16 : 0.0;
-        $headerHeight = $frame->shape === FrameShape::Security ? $view * 0.15 : 0.0;
+        $labelHeight = null !== $frame->label ? $view * 0.16 : 0.0;
+        $headerHeight = FrameShape::Security === $frame->shape ? $view * 0.15 : 0.0;
         $totalHeight = $view + $labelHeight + $headerHeight;
         $outHeight = (int) round($style->size * $totalHeight / $view);
 
@@ -61,7 +61,7 @@ final readonly class FrameRenderer
         }
 
         // Security shape: badge with header band + built-in title
-        if ($frame->shape === FrameShape::Security) {
+        if (FrameShape::Security === $frame->shape) {
             $svg .= $contentDefs;
             // 1. Badge shape (rounded rect covering full area)
             $svg .= sprintf('<rect width="%d" height="%.4F" rx="%.4F" fill="%s"/>', $view, $totalHeight, $view * 0.08, $frameFill);
@@ -92,7 +92,7 @@ final readonly class FrameRenderer
                 $margin, $qrY, $qrScale, $contentBody
             );
 
-            if ($frame->label !== null) {
+            if (null !== $frame->label) {
                 $color = $this->escape($frame->labelColor ?? $style->foreground);
                 $svg .= sprintf(
                     '<text x="%.4F" y="%.4F" text-anchor="middle" font-family="sans-serif" font-size="%.4F" fill="%s">%s</text>',
@@ -107,7 +107,7 @@ final readonly class FrameRenderer
             return $svg.'</svg>';
         }
 
-        $clipId = 'neoxFrameClip_' . bin2hex(random_bytes(4));
+        $clipId = 'neoxFrameClip_'.bin2hex(random_bytes(4));
 
         // Clip: anything outside the shape is cut
         $svg .= $contentDefs;
@@ -134,7 +134,7 @@ final readonly class FrameRenderer
         );
         $svg .= '</g>';
 
-        if ($frame->label !== null) {
+        if (null !== $frame->label) {
             $color = $this->escape($frame->labelColor ?? $style->foreground);
             $svg .= sprintf(
                 '<text x="%.4F" y="%.4F" text-anchor="middle" font-family="sans-serif" font-size="%.4F" fill="%s">%s</text>',

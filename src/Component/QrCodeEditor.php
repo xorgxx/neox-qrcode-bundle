@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Component;
 
-use Xorgxx\NeoxQrCodeBundle\Service\QrPresetRegistry;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
+use Xorgxx\NeoxQrCodeBundle\Service\QrPresetRegistry;
 
 #[AsTwigComponent(name: 'NeoxQrCodeEditor', template: '@NeoxQrCode/components/QrCodeEditor.html.twig')]
 final class QrCodeEditor

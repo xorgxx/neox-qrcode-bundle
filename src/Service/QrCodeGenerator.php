@@ -35,7 +35,7 @@ final readonly class QrCodeGenerator
         }
 
         $matrix = $this->matrixGenerator->generate($content, $errorCorrection);
-        $svg = $frame !== null
+        $svg = null !== $frame
             ? $this->frameRenderer->render($matrix, $style, $frame)
             : $this->renderer->render($matrix, $style);
 
@@ -52,6 +52,7 @@ final readonly class QrCodeGenerator
         ErrorCorrection $errorCorrection = ErrorCorrection::High,
     ): QrCodeResult {
         $config = $this->presets->get($preset);
+
         return $this->generate($content, $config['style'], $errorCorrection, $config['frame'] ?? null);
     }
 }

@@ -23,23 +23,23 @@ use Xorgxx\NeoxQrCodeBundle\Enum\ModuleShape;
  */
 final class ShapeRegistry
 {
-    private const TYPE_RECT    = 'rect';
-    private const TYPE_CIRCLE  = 'circle';
+    private const TYPE_RECT = 'rect';
+    private const TYPE_CIRCLE = 'circle';
     private const TYPE_DIAMOND = 'diamond';
-    private const TYPE_PATH    = 'path';
-    private const TYPE_NONE    = 'none';
+    private const TYPE_PATH = 'path';
+    private const TYPE_NONE = 'none';
 
     /**
      * Normalized SVG path data (coordinates 0–1) for path-based shapes.
      *
      * @var array<string, string>
      */
-//    private array $paths = [
-//        'heart'   => 'M 0.5 0.92 C 0.42 0.84 0.08 0.62 0.08 0.32 C 0.08 0.13 0.22 0.05 0.36 0.05 C 0.45 0.05 0.5 0.12 0.5 0.12 C 0.5 0.12 0.55 0.05 0.64 0.05 C 0.78 0.05 0.92 0.13 0.92 0.32 C 0.92 0.62 0.58 0.84 0.5 0.92 Z',
-//        'leaf'    => 'M 0.5 0.03 C 0.82 0.18 0.92 0.50 0.5 0.97 C 0.08 0.50 0.18 0.18 0.5 0.03 Z',
-//        'hexagon' => 'M 0.5 0.06 L 0.92 0.30 L 0.92 0.70 L 0.5 0.94 L 0.08 0.70 L 0.08 0.30 Z',
-//        'star'    => 'M 0.5 0.05 L 0.61 0.35 L 0.95 0.35 L 0.67 0.55 L 0.78 0.90 L 0.5 0.70 L 0.22 0.90 L 0.33 0.55 L 0.05 0.35 L 0.39 0.35 Z',
-//    ];
+    //    private array $paths = [
+    //        'heart'   => 'M 0.5 0.92 C 0.42 0.84 0.08 0.62 0.08 0.32 C 0.08 0.13 0.22 0.05 0.36 0.05 C 0.45 0.05 0.5 0.12 0.5 0.12 C 0.5 0.12 0.55 0.05 0.64 0.05 C 0.78 0.05 0.92 0.13 0.92 0.32 C 0.92 0.62 0.58 0.84 0.5 0.92 Z',
+    //        'leaf'    => 'M 0.5 0.03 C 0.82 0.18 0.92 0.50 0.5 0.97 C 0.08 0.50 0.18 0.18 0.5 0.03 Z',
+    //        'hexagon' => 'M 0.5 0.06 L 0.92 0.30 L 0.92 0.70 L 0.5 0.94 L 0.08 0.70 L 0.08 0.30 Z',
+    //        'star'    => 'M 0.5 0.05 L 0.61 0.35 L 0.95 0.35 L 0.67 0.55 L 0.78 0.90 L 0.5 0.70 L 0.22 0.90 L 0.33 0.55 L 0.05 0.35 L 0.39 0.35 Z',
+    //    ];
     private array $paths = [
         'heart' => '
             M 0.50 0.92
@@ -150,7 +150,7 @@ final class ShapeRegistry
      * @var array<string, float>
      */
     private array $cornerRadii = [
-        'rounded'        => 0.35,
+        'rounded' => 0.35,
         'rounded-finder' => 0.28,
     ];
 
@@ -160,12 +160,12 @@ final class ShapeRegistry
      * @var array<string, array{type: string, path?: string, radius?: string}>
      */
     private array $moduleShapes = [
-        'square'  => ['type' => self::TYPE_RECT],
+        'square' => ['type' => self::TYPE_RECT],
         'rounded' => ['type' => self::TYPE_RECT, 'radius' => 'rounded'],
-        'dot'     => ['type' => self::TYPE_CIRCLE],
+        'dot' => ['type' => self::TYPE_CIRCLE],
         'diamond' => ['type' => self::TYPE_DIAMOND],
-        'heart'   => ['type' => self::TYPE_PATH, 'path' => 'heart'],
-        'liquid'  => ['type' => self::TYPE_RECT, 'radius' => 'rounded'],
+        'heart' => ['type' => self::TYPE_PATH, 'path' => 'heart'],
+        'liquid' => ['type' => self::TYPE_RECT, 'radius' => 'rounded'],
     ];
 
     /**
@@ -174,15 +174,15 @@ final class ShapeRegistry
      * @var array<string, array{type: string, path?: string, radius?: string}>
      */
     private array $finderShapes = [
-        'square'   => ['type' => self::TYPE_RECT],
-        'rounded'  => ['type' => self::TYPE_RECT, 'radius' => 'rounded-finder'],
-        'circle'   => ['type' => self::TYPE_CIRCLE],
-        'diamond'  => ['type' => self::TYPE_DIAMOND],
-        'leaf'     => ['type' => self::TYPE_PATH, 'path' => 'leaf'],
-        'hexagon'  => ['type' => self::TYPE_PATH, 'path' => 'hexagon'],
-        'star'     => ['type' => self::TYPE_PATH, 'path' => 'star'],
-        'dotted'   => ['type' => self::TYPE_CIRCLE],
-        'minimal'  => ['type' => self::TYPE_NONE],
+        'square' => ['type' => self::TYPE_RECT],
+        'rounded' => ['type' => self::TYPE_RECT, 'radius' => 'rounded-finder'],
+        'circle' => ['type' => self::TYPE_CIRCLE],
+        'diamond' => ['type' => self::TYPE_DIAMOND],
+        'leaf' => ['type' => self::TYPE_PATH, 'path' => 'leaf'],
+        'hexagon' => ['type' => self::TYPE_PATH, 'path' => 'hexagon'],
+        'star' => ['type' => self::TYPE_PATH, 'path' => 'star'],
+        'dotted' => ['type' => self::TYPE_CIRCLE],
+        'minimal' => ['type' => self::TYPE_NONE],
         'inverted' => ['type' => self::TYPE_NONE],
     ];
 
@@ -192,12 +192,12 @@ final class ShapeRegistry
      * @var array<string, array{type: string, path?: string, radius?: string}>
      */
     private array $alignmentShapes = [
-        'square'  => ['type' => self::TYPE_RECT],
+        'square' => ['type' => self::TYPE_RECT],
         'rounded' => ['type' => self::TYPE_RECT, 'radius' => 'rounded'],
-        'circle'  => ['type' => self::TYPE_CIRCLE],
+        'circle' => ['type' => self::TYPE_CIRCLE],
         'diamond' => ['type' => self::TYPE_DIAMOND],
-        'leaf'    => ['type' => self::TYPE_PATH, 'path' => 'leaf'],
-        'dot'     => ['type' => self::TYPE_CIRCLE],
+        'leaf' => ['type' => self::TYPE_PATH, 'path' => 'leaf'],
+        'dot' => ['type' => self::TYPE_CIRCLE],
     ];
 
     public function renderModule(ModuleShape $shape, float $x, float $y, float $s, string $paint): string
@@ -291,6 +291,7 @@ final class ShapeRegistry
             self::TYPE_PATH => $this->renderPath($def['path'] ?? '', $x, $y, $s, $paint),
 
             self::TYPE_NONE => '',
+            default => '',
         };
     }
 

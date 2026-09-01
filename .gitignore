@@ -1,6 +1,8 @@
 /vendor/
 /var/
 /.phpunit.cache/
+/.phpstan.tmp/
+/.php-cs-fixer.cache
 /.idea/
 /.vscode/
 /node_modules/

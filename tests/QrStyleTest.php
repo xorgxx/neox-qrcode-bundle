@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Tests;
 
+use PHPUnit\Framework\TestCase;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderEffect;
 use Xorgxx\NeoxQrCodeBundle\Enum\ModuleShape;
 use Xorgxx\NeoxQrCodeBundle\Model\QrStyle;
-use PHPUnit\Framework\TestCase;
 
 final class QrStyleTest extends TestCase
 {

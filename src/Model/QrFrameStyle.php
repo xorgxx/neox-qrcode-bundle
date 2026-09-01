@@ -16,14 +16,14 @@ final readonly class QrFrameStyle
         public bool $decorative = true,
         public float $decorativeOpacity = 0.6,
     ) {
-        if ($labelColor !== null && !preg_match('/^#[0-9a-fA-F]{6}$/', $labelColor)) {
+        if (null !== $labelColor && !preg_match('/^#[0-9a-fA-F]{6}$/', $labelColor)) {
             throw new \InvalidArgumentException(sprintf('Invalid color "%s".', $labelColor));
         }
-        if ($frameColor !== null && !preg_match('/^#[0-9a-fA-F]{6}$/', $frameColor)) {
+        if (null !== $frameColor && !preg_match('/^#[0-9a-fA-F]{6}$/', $frameColor)) {
             throw new \InvalidArgumentException(sprintf('Invalid color "%s".', $frameColor));
         }
 
-        if ($label !== null && mb_strlen($label) > 60) {
+        if (null !== $label && mb_strlen($label) > 60) {
             throw new \InvalidArgumentException('Frame label must be 60 characters or fewer.');
         }
     }

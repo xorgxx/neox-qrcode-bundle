@@ -17,7 +17,8 @@ final class SvgRenderer
 {
     public function __construct(
         private readonly ShapeRegistry $shapes,
-    ) {}
+    ) {
+    }
 
     public function render(QrMatrix $matrix, QrStyle $style): string
     {
@@ -47,26 +48,25 @@ final class SvgRenderer
         $skipFinderModules = in_array($style->finderShape, [FinderShape::Minimal, FinderShape::Inverted, ...$ringFamily], true);
 
         $uid = bin2hex(random_bytes(4));
-        $gradientId = 'neoxQrGradient_' . $uid;
-        $finderGradientId = 'neoxFinderGradient_' . $uid;
-        $liquidFilterId = 'neoxLiquidFilter_' . $uid;
+        $gradientId = 'neoxQrGradient_'.$uid;
+        $finderGradientId = 'neoxFinderGradient_'.$uid;
+        $liquidFilterId = 'neoxLiquidFilter_'.$uid;
 
         $svg = '<defs>';
-        if ($style->gradientType !== GradientType::None && $style->gradientTo !== null) {
+        if (GradientType::None !== $style->gradientType && null !== $style->gradientTo) {
             $to = $this->escape($style->gradientTo);
             $svg .= match ($style->gradientType) {
                 GradientType::Linear => sprintf('<linearGradient id="%s" x1="0%%" y1="0%%" x2="100%%" y2="100%%"><stop offset="0%%" stop-color="%s"/><stop offset="100%%" stop-color="%s"/></linearGradient>', $gradientId, $fg, $to),
                 GradientType::Radial => sprintf('<radialGradient id="%s" cx="50%%" cy="50%%" r="70%%"><stop offset="0%%" stop-color="%s"/><stop offset="100%%" stop-color="%s"/></radialGradient>', $gradientId, $fg, $to),
-                GradientType::None => '',
             };
-            $modulePaint = 'url(#' . $gradientId . ')';
+            $modulePaint = 'url(#'.$gradientId.')';
         }
-        if ($style->finderEffect === FinderEffect::Gradient && $style->finderGradientTo !== null) {
+        if (FinderEffect::Gradient === $style->finderEffect && null !== $style->finderGradientTo) {
             $fTo = $this->escape($style->finderGradientTo);
             $svg .= sprintf('<radialGradient id="%s" cx="50%%" cy="50%%" r="70%%"><stop offset="0%%" stop-color="%s"/><stop offset="100%%" stop-color="%s"/></radialGradient>', $finderGradientId, $finderColor, $fTo);
-            $finderPaint = 'url(#' . $finderGradientId . ')';
+            $finderPaint = 'url(#'.$finderGradientId.')';
         }
-        if ($style->moduleShape === ModuleShape::Liquid) {
+        if (ModuleShape::Liquid === $style->moduleShape) {
             $svg .= sprintf('<filter id="%s" x="-10%%" y="-10%%" width="120%%" height="120%%"><feGaussianBlur in="SourceGraphic" stdDeviation="0.4"/><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter>', $liquidFilterId);
         }
         $svg .= '</defs>';
@@ -75,7 +75,7 @@ final class SvgRenderer
         $svg .= $this->renderFinderShadow($n, $style);
         $svg .= '<g shape-rendering="geometricPrecision">';
 
-        if ($style->moduleShape === ModuleShape::Liquid) {
+        if (ModuleShape::Liquid === $style->moduleShape) {
             $svg .= $this->renderLiquidModules($matrix, $n, $style, $modulePaint, $alignmentColor, $alignmentPositions, $skipFinderModules, $finderPaint, $liquidFilterId);
         } else {
             for ($y = 0; $y < $n; ++$y) {
@@ -116,7 +116,7 @@ final class SvgRenderer
 
     private function renderLogo(int $view, QrStyle $style): string
     {
-        if ($style->logoHref === null) {
+        if (null === $style->logoHref) {
             return '';
         }
 
@@ -163,6 +163,8 @@ final class SvgRenderer
      * metaball filter (Gaussian blur + alpha threshold). All touching
      * modules — horizontally, vertically, and diagonally — fuse into a
      * single continuous blob with smooth rounded boundaries.
+     *
+     * @param array<int, array{int,int}> $alignmentPositions
      */
     private function renderLiquidModules(
         QrMatrix $matrix,
@@ -202,7 +204,7 @@ final class SvgRenderer
             }
         }
 
-        return '<g filter="url(#' . $liquidFilterId . ')">' . $dataSvg . '</g>' . $otherSvg;
+        return '<g filter="url(#'.$liquidFilterId.')">'.$dataSvg.'</g>'.$otherSvg;
     }
 
     private function renderFinderCell(float $x, float $y, FinderShape $shape, string $color, float $scale): string
@@ -232,7 +234,7 @@ final class SvgRenderer
         $svg = '';
 
         foreach ($this->finderAnchors($n) as [$fx, $fy]) {
-            if ($style->finderShape === FinderShape::Inverted) {
+            if (FinderShape::Inverted === $style->finderShape) {
                 for ($dy = 0; $dy < 7; ++$dy) {
                     for ($dx = 0; $dx < 7; ++$dx) {
                         $color = $matrix->isDark($fx + $dx, $fy + $dy) ? $bg : $paint;
@@ -274,7 +276,7 @@ final class SvgRenderer
             $svg .= $this->renderRingBlock($x, $y, 7.0, $style->finderShape, $color);
             $svg .= $this->renderRingBlock($x + 1, $y + 1, 5.0, $style->finderShape, $bg);
 
-            if ($style->finderEyeShape !== null) {
+            if (null !== $style->finderEyeShape) {
                 $eye = $style->finderEyeShape;
                 $pathBased = [FinderShape::Leaf, FinderShape::Hexagon, FinderShape::Star];
                 if (in_array($eye, $pathBased, true)) {
@@ -339,7 +341,7 @@ final class SvgRenderer
 
     private function renderFinderShadow(int $n, QrStyle $style): string
     {
-        if ($style->finderEffect !== FinderEffect::Shadow) {
+        if (FinderEffect::Shadow !== $style->finderEffect) {
             return '';
         }
 
@@ -364,7 +366,7 @@ final class SvgRenderer
             $x = $fx + $style->margin - 0.2;
             $y = $fy + $style->margin - 0.2;
 
-            if ($style->finderEffect === FinderEffect::Dashed) {
+            if (FinderEffect::Dashed === $style->finderEffect) {
                 $svg .= sprintf(
                     '<rect x="%.4F" y="%.4F" width="7.4" height="7.4" rx="1.2" fill="none" stroke="%s" stroke-width="0.3" stroke-dasharray="0.8 0.6"/>',
                     $x,
@@ -383,7 +385,7 @@ final class SvgRenderer
 
     private function renderFinderIcons(int $n, QrStyle $style): string
     {
-        if ($style->finderIconHref === null) {
+        if (null === $style->finderIconHref) {
             return '';
         }
 
@@ -407,25 +409,13 @@ final class SvgRenderer
         return $svg;
     }
 
-    private function renderAlignmentCell(float $x, float $y, AlignmentShape $shape, string $color, float $scale): string
-    {
-        $s = max($scale, .92);
-
-        return match ($shape) {
-            AlignmentShape::Square => $this->shapes->renderModule(ModuleShape::Square, $x, $y, $s, $color),
-            AlignmentShape::Rounded => $this->shapes->renderModule(ModuleShape::Rounded, $x, $y, $s, $color),
-            AlignmentShape::Circle => $this->shapes->renderModule(ModuleShape::Dot, $x, $y, $s, $color),
-            AlignmentShape::Diamond => $this->shapes->renderModule(ModuleShape::Diamond, $x, $y, $s, $color),
-            AlignmentShape::Leaf => $this->shapes->renderAlignment($shape, $x, $y, $s, $color),
-            AlignmentShape::Dot => $this->shapes->renderModule(ModuleShape::Dot, $x, $y, $s * .85, $color),
-        };
-    }
-
     /**
      * Renders alignment patterns as concentric solid shapes (5x5 ring,
      * 3x3 background cutout, 1x1 center dot) instead of individual modules.
      * Uses the same shape as the alignment shape selection for the outer
      * ring and center dot.
+     *
+     * @param array<int, array{int,int}> $centers
      */
     private function renderAlignmentRings(array $centers, QrStyle $style, string $color): string
     {
@@ -458,7 +448,6 @@ final class SvgRenderer
     {
         return $this->shapes->renderAlignment($shape, $x, $y, $size, $color);
     }
-
 
     private function isFinderArea(int $x, int $y, int $n): bool
     {
@@ -493,13 +482,13 @@ final class SvgRenderer
 
         foreach ($positions as $row) {
             foreach ($positions as $col) {
-                if ($row === 6 && $col === 6) {
+                if (6 === $row && 6 === $col) {
                     continue;
                 }
-                if ($row === 6 && $col === $last) {
+                if (6 === $row && $col === $last) {
                     continue;
                 }
-                if ($row === $last && $col === 6) {
+                if ($row === $last && 6 === $col) {
                     continue;
                 }
                 $centers[] = [$row, $col];

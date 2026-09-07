@@ -40,8 +40,13 @@ renderShape() — méthode unique pour toutes les formes
 | `diamond`  | `<path>`        | Diamant à 4 points                 |
 | `heart`    | `<path>`        | Cœur (chemin normalisé)            |
 | `liquid`   | `<rect rx>`     | Filtre metaball fusionnant les modules adjacents |
+| `blob`     | `<circle/path>` | Noyaux ronds et ponts larges entre voisins sombres |
+| `wave`     | `<circle/path>` | Noyaux compacts et ponts courbes alternés |
+| `cross`    | `<path>`        | Noyaux en croix et ponts fins entre voisins sombres |
 
-### Formes de finder (enum `FinderShape`)
+### Anciennes formes de finder (enum `FinderShape`)
+
+`FinderShape` est conservée pour la compatibilité. Les nouveaux appels utilisent `FinderFrameShape` (`square`, `rounded`, `circle`) pour le cadre fonctionnel et `FinderEyeShape` (`square`, `rounded`, `circle`, `diamond`, `leaf`, `hexagon`, `star`, `octagon`, `shield`, `heart`, `flower`) pour l'œil décoratif. Une ancienne forme décorative est normalisée en cadre carré canonique avec la décoration limitée à l'œil.
 
 | Valeur     | Élément SVG     | Description                        |
 |------------|-----------------|------------------------------------|
@@ -154,14 +159,13 @@ Aucun changement nécessaire dans `SvgRenderer`. Le renderer délègue déjà à
 </select>
 ```
 
-#### Même pattern pour FinderShape et AlignmentShape
+#### Même pattern pour les cadres, yeux et formes d'alignement
 
-| Étape | FinderShape | AlignmentShape |
-|-------|-------------|----------------|
-| Enum  | `src/Enum/FinderShape.php` | `src/Enum/AlignmentShape.php` |
-| Chemin| `$paths` dans `ShapeRegistry` | `$paths` dans `ShapeRegistry` |
-| Rendu | `renderFinder()` dans `ShapeRegistry` | `renderAlignment()` dans `ShapeRegistry` |
-| UI    | select `neox-finderShape` | select `neox-alignmentShape` |
+| Étape | Cadre de finder | Œil de finder | Alignement |
+|-------|------------------|----------------|------------|
+| Enum | `FinderFrameShape` | `FinderEyeShape` | `AlignmentShape` |
+| Rendu | `renderFinderFrame()` | `renderFinderEye()` | `renderAlignment()` |
+| UI | select `neox-finderShape` | select `neox-finderEyeShape` | select `neox-alignmentShape` |
 
 #### Format des chemins
 

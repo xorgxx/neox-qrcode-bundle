@@ -6,6 +6,8 @@ namespace Xorgxx\NeoxQrCodeBundle\Model;
 
 use Xorgxx\NeoxQrCodeBundle\Enum\AlignmentShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderEffect;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderEyeShape;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderFrameShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\GradientType;
 use Xorgxx\NeoxQrCodeBundle\Enum\ModuleShape;
@@ -33,7 +35,9 @@ final readonly class QrStyle
         public FinderEffect $finderEffect = FinderEffect::None,
         public ?string $finderGradientTo = null,
         public ?ModuleShape $finderCenterShape = null,
-        public ?FinderShape $finderEyeShape = null,
+        public FinderShape|FinderEyeShape|null $finderEyeShape = null,
+        public ?FinderFrameShape $finderFrameShape = null,
+        public float $finderEyeScale = 1.0,
     ) {
         if ($size < 64 || $size > 4096) {
             throw new \InvalidArgumentException('QR size must be between 64 and 4096 pixels.');
@@ -49,6 +53,9 @@ final readonly class QrStyle
         }
         if ($finderIconScale < 0.2 || $finderIconScale > 0.85) {
             throw new \InvalidArgumentException('finderIconScale must be between 0.2 and 0.85.');
+        }
+        if ($finderEyeScale < 0.85 || $finderEyeScale > 1.08) {
+            throw new \InvalidArgumentException('finderEyeScale must be between 0.85 and 1.08.');
         }
 
         foreach ([$foreground, $background, $finderColor, $gradientTo, $alignmentColor, $finderGradientTo] as $color) {

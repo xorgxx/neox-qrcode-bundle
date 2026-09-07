@@ -8,6 +8,8 @@ use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 use Xorgxx\NeoxQrCodeBundle\Enum\AlignmentShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\ErrorCorrection;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderEffect;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderEyeShape;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderFrameShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\FrameShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\GradientType;
@@ -26,6 +28,7 @@ final class QrCode
     public int $margin = 4;
     public string $moduleShape = 'square';
     public string $finderShape = 'square';
+    public ?string $finderFrameShape = null;
     public string $foreground = '#111111';
     public string $background = '#ffffff';
     public ?string $finderColor = null;
@@ -43,6 +46,7 @@ final class QrCode
     public string $finderEffect = 'none';
     public ?string $finderGradientTo = null;
     public ?string $finderEyeShape = null;
+    public float $finderEyeScale = 1.0;
     public string $frameShape = 'none';
     public ?string $frameLabel = null;
     public ?string $frameLabelColor = null;
@@ -90,7 +94,9 @@ final class QrCode
             finderGradientTo: $this->finderGradientTo,
             alignmentShape: AlignmentShape::from($this->alignmentShape),
             alignmentColor: $this->alignmentColor,
-            finderEyeShape: null !== $this->finderEyeShape && '' !== $this->finderEyeShape ? FinderShape::from($this->finderEyeShape) : null,
+            finderEyeShape: null !== $this->finderEyeShape && '' !== $this->finderEyeShape ? FinderEyeShape::from($this->finderEyeShape) : null,
+            finderFrameShape: null !== $this->finderFrameShape && '' !== $this->finderFrameShape ? FinderFrameShape::from($this->finderFrameShape) : null,
+            finderEyeScale: $this->finderEyeScale,
         );
 
         $frameShape = FrameShape::from($this->frameShape);

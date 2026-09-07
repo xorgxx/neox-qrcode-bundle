@@ -9,30 +9,34 @@ The QR matrix is never cosmetically altered. Only active modules are rendered wi
 - `dot` -> `<circle>`
 - `diamond` -> SVG `<path>`
 - `heart` -> normalized SVG `<path>`
-- `liquid` -> all touching data modules (horizontal, vertical, diagonal) are merged into continuous blob shapes via an SVG metaball filter (Gaussian blur + alpha threshold), creating a true liquid/fluid appearance
+- `liquid` -> all touching data modules (horizontal, vertical, diagonal) are merged into continuous blob shapes via an SVG metaball filter (Gaussian blur + alpha threshold)
+- `blob` -> round modules joined to orthogonal dark neighbors by broad, rounded bridges
+- `wave` -> compact round modules joined by alternating quadratic wave bridges
+- `cross` -> cross-shaped modules joined by narrow, rounded bridges
 
-## Finder shapes
+The liquid filter is limited to ordinary data modules. Finder frames and alignment patterns are rendered afterward without the filter so their functional geometry stays crisp. The validation score applies a five-point penalty and emits a warning; test every intended display or print size with real scanners.
 
-Finders (the three corner squares) are rendered independently from ordinary data modules.
+## Finder frame and eye shapes
+
+Finders are rendered independently from ordinary data modules. Their functional frame is restricted to `square`, `rounded`, or `circle` so scanners retain a recognizable locator structure.
 
 - `square` -> `<rect>`
 - `rounded` -> rounded `<rect>`
 - `circle` -> `<circle>`
-- `diamond` -> SVG `<path>`
-- `leaf` -> SVG `<path>`
-- `hexagon` -> SVG `<path>`
-- `star` -> SVG `<path>`
-- `dotted` -> small `<circle>` per module (dotted ring look)
-- `minimal` -> open corner brackets only (no ring/square fill)
-- `inverted` -> colors of the finder pattern are swapped (dark <-> background)
 
 A separate `finderColor` can be set to differentiate finders from data modules.
 
-`square`, `rounded`, `circle` and `diamond` are rendered as **three unified concentric shapes** (outer 7x7 ring, 5x5 background cutout, 3x3 eye) instead of a mosaic of individually shaped modules. This guarantees a genuinely continuous, solid outline for `circle` and `diamond` (previously a ring of visually disconnected dots/points).
+The frame and cutout are rendered as two unified concentric shapes (7x7 and 5x5). Legacy decorative `finderShape` values remain accepted: they now use a canonical square frame and apply their shape only to the eye.
 
 ### Finder eye shape
 
-`finderEyeShape` independently controls the innermost 3x3 block ("eye") of the finder, using the same `FinderShape` enum as the outer ring (`square`, `rounded`, `circle`, `diamond`, `leaf`, `hexagon`, `star`). When omitted, it defaults to a shape matching the outer ring. This lets you mix, for example, a solid square outer ring with a round eye, or a circle ring with a star eye.
+`finderEyeShape` controls the innermost 3x3 block with `square`, `rounded`, `circle`, `diamond`, `leaf`, `hexagon`, `star`, `octagon`, `shield`, `heart`, or `flower` (a simple four-petal flower). `finderFrameShape` controls the safe outer frame.
+
+The `star` eye uses a dedicated, chunkier path than the general decorative star. Its shallower valleys preserve enough dark area.
+
+Decorative eyes render at 3.2 modules, compared with 3 modules for classic shapes. They remain centered and reduce the light separator by only 0.1 module on each side.
+
+`finderEyeScale` adjusts this size from `0.85` to `1.08`. The default is `1.0`; increasing it reduces the light separator and slightly lowers the estimated score.
 
 `finderCenterShape` (legacy) also controls the eye but uses `ModuleShape` values. If both are set, `finderEyeShape` takes priority.
 

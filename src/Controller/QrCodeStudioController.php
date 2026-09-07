@@ -53,6 +53,7 @@ final class QrCodeStudioController extends AbstractController
                     'finderEffect' => $style->finderEffect->value,
                     'finderGradientTo' => $style->finderGradientTo,
                     'finderEyeShape' => $style->finderEyeShape?->value,
+                    'finderEyeScale' => $style->finderEyeScale,
                     'frameShape' => $frame?->shape->value ?? 'none',
                     'frameLabel' => $frame?->label,
                     'frameLabelColor' => $frame?->labelColor,

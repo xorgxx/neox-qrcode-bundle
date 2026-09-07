@@ -17,6 +17,9 @@ services:
         arguments:
             $cache: '@cache.app'
 
+    Xorgxx\NeoxQrCodeBundle\Decoder\QrDecoderInterface:
+        class: Xorgxx\NeoxQrCodeBundle\Decoder\NullQrDecoder
+
     Xorgxx\NeoxQrCodeBundle\Security\SecureQrPayloadService:
         arguments:
             $secret: '%env(NEOX_QRCODE_SECRET)%'

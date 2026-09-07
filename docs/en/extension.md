@@ -2,7 +2,7 @@
 
 ## New module shape
 
-Add a case to `ModuleShape`, then implement its SVG primitive in `SvgRenderer::renderModule()`.
+Add a case to `ModuleShape`, then declare its SVG primitive in `ShapeRegistry`. Do not modify the QR matrix.
 
 ## New preset
 
@@ -13,6 +13,15 @@ $presets->register('brand', new QrStyle(...));
 ## Different image output
 
 Keep SVG as the canonical renderer and add another raster/export adapter, or implement a new renderer around `QrMatrix`.
+
+## Server-side verification decoder
+
+The bundle uses `NullQrDecoder` by default and requires no decoding library. To enable real server-side verification, implement `QrDecoderInterface`, decode the SVG at the sizes supplied by `ReadabilityProfile`, then replace the service alias. The adapter must return a `QrDecodeReport` and compare decoded content with expected content.
+
+```yaml
+Xorgxx\NeoxQrCodeBundle\Decoder\QrDecoderInterface:
+    class: App\QrCode\ServerQrDecoder
+```
 
 ## New secure payload strategy
 

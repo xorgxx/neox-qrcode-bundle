@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Xorgxx\NeoxQrCodeBundle\Service;
 
 use Xorgxx\NeoxQrCodeBundle\Enum\AlignmentShape;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderEyeShape;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderFrameShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\ModuleShape;
 
@@ -80,6 +82,47 @@ final class ShapeRegistry
             L 0.32 0.55
             L 0.05 0.35
             L 0.39 0.35
+            Z
+        ',
+
+        // Chunkier star dedicated to finder eyes. Its shallow valleys keep
+        // enough dark mass while the whole path remains inside the 3x3 eye.
+        'star-eye' => '
+            M 0.50 0.02
+            L 0.718 0.201
+            L 0.956 0.352
+            L 0.852 0.614
+            L 0.782 0.888
+            L 0.50 0.87
+            L 0.218 0.888
+            L 0.148 0.614
+            L 0.044 0.352
+            L 0.282 0.201
+            Z
+        ',
+
+        'octagon' => '
+            M 0.28 0.03
+            L 0.72 0.03
+            L 0.97 0.28
+            L 0.97 0.72
+            L 0.72 0.97
+            L 0.28 0.97
+            L 0.03 0.72
+            L 0.03 0.28
+            Z
+        ',
+
+        'flower-eye' => '
+            M 0.50 0.04
+            C 0.68 0.04 0.77 0.18 0.72 0.32
+            C 0.86 0.24 0.96 0.32 0.96 0.50
+            C 0.96 0.68 0.82 0.77 0.68 0.72
+            C 0.76 0.86 0.68 0.96 0.50 0.96
+            C 0.32 0.96 0.23 0.82 0.28 0.68
+            C 0.14 0.76 0.04 0.68 0.04 0.50
+            C 0.04 0.32 0.18 0.23 0.32 0.28
+            C 0.24 0.14 0.32 0.04 0.50 0.04
             Z
         ',
 
@@ -166,6 +209,9 @@ final class ShapeRegistry
         'diamond' => ['type' => self::TYPE_DIAMOND],
         'heart' => ['type' => self::TYPE_PATH, 'path' => 'heart'],
         'liquid' => ['type' => self::TYPE_RECT, 'radius' => 'rounded'],
+        'blob' => ['type' => self::TYPE_CIRCLE],
+        'wave' => ['type' => self::TYPE_CIRCLE],
+        'cross' => ['type' => self::TYPE_PATH, 'path' => 'cross'],
     ];
 
     /**
@@ -184,6 +230,21 @@ final class ShapeRegistry
         'dotted' => ['type' => self::TYPE_CIRCLE],
         'minimal' => ['type' => self::TYPE_NONE],
         'inverted' => ['type' => self::TYPE_NONE],
+    ];
+
+    /** @var array<string, array{type: string, path?: string, radius?: string}> */
+    private array $finderEyeShapes = [
+        'square' => ['type' => self::TYPE_RECT],
+        'rounded' => ['type' => self::TYPE_RECT, 'radius' => 'rounded-finder'],
+        'circle' => ['type' => self::TYPE_CIRCLE],
+        'diamond' => ['type' => self::TYPE_DIAMOND],
+        'leaf' => ['type' => self::TYPE_PATH, 'path' => 'leaf'],
+        'hexagon' => ['type' => self::TYPE_PATH, 'path' => 'hexagon'],
+        'star' => ['type' => self::TYPE_PATH, 'path' => 'star-eye'],
+        'octagon' => ['type' => self::TYPE_PATH, 'path' => 'octagon'],
+        'shield' => ['type' => self::TYPE_PATH, 'path' => 'shield'],
+        'heart' => ['type' => self::TYPE_PATH, 'path' => 'heart'],
+        'flower' => ['type' => self::TYPE_PATH, 'path' => 'flower-eye'],
     ];
 
     /**
@@ -210,6 +271,20 @@ final class ShapeRegistry
     public function renderFinder(FinderShape $shape, float $x, float $y, float $size, string $color): string
     {
         $def = $this->finderShapes[$shape->value] ?? null;
+
+        return $def ? $this->renderShape($def, $x, $y, $size, $color) : '';
+    }
+
+    public function renderFinderFrame(FinderFrameShape $shape, float $x, float $y, float $size, string $color): string
+    {
+        $def = $this->finderShapes[$shape->value] ?? null;
+
+        return $def ? $this->renderShape($def, $x, $y, $size, $color) : '';
+    }
+
+    public function renderFinderEye(FinderEyeShape $shape, float $x, float $y, float $size, string $color): string
+    {
+        $def = $this->finderEyeShapes[$shape->value] ?? null;
 
         return $def ? $this->renderShape($def, $x, $y, $size, $color) : '';
     }

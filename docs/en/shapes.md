@@ -40,8 +40,13 @@ SVG element (<rect>, <circle>, <path>)
 | `diamond`  | `<path>`        | 4-point diamond                    |
 | `heart`    | `<path>`        | Heart shape (normalized path)      |
 | `liquid`   | `<rect rx>`     | Metaball filter merges touching modules into continuous blobs |
+| `blob`     | `<circle/path>` | Round nodes with broad bridges between dark neighbors |
+| `wave`     | `<circle/path>` | Compact nodes with curved alternating bridges |
+| `cross`    | `<path>`        | Cross nodes with narrow bridges between dark neighbors |
 
-### Finder shapes (`FinderShape` enum)
+### Legacy finder shapes (`FinderShape` enum)
+
+`FinderShape` remains available for compatibility. New calls use `FinderFrameShape` (`square`, `rounded`, `circle`) for the functional frame and `FinderEyeShape` (`square`, `rounded`, `circle`, `diamond`, `leaf`, `hexagon`, `star`, `octagon`, `shield`, `heart`, `flower`) for the decorative eye. A legacy decorative shape is normalized to a canonical square frame with decoration restricted to the eye.
 
 | Value      | SVG element     | Description                        |
 |------------|-----------------|------------------------------------|
@@ -158,14 +163,13 @@ To make the new shape selectable in the Studio page and Twig editor:
 </select>
 ```
 
-#### Same pattern for FinderShape and AlignmentShape
+#### Same pattern for finder frames, eyes, and alignment shapes
 
-| Step | FinderShape | AlignmentShape |
-|------|-------------|----------------|
-| Enum | `src/Enum/FinderShape.php` | `src/Enum/AlignmentShape.php` |
-| Path | `$paths` in `ShapeRegistry` | `$paths` in `ShapeRegistry` |
-| Render | `renderFinder()` in `ShapeRegistry` | `renderAlignment()` in `ShapeRegistry` |
-| UI | `neox-finderShape` select | `neox-alignmentShape` select |
+| Step | Finder frame | Finder eye | Alignment |
+|------|--------------|------------|-----------|
+| Enum | `FinderFrameShape` | `FinderEyeShape` | `AlignmentShape` |
+| Render | `renderFinderFrame()` | `renderFinderEye()` | `renderAlignment()` |
+| UI | `neox-finderShape` | `neox-finderEyeShape` | `neox-alignmentShape` |
 
 #### Path format
 

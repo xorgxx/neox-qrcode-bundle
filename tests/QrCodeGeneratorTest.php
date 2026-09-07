@@ -7,6 +7,8 @@ namespace Xorgxx\NeoxQrCodeBundle\Tests;
 use PHPUnit\Framework\TestCase;
 use Xorgxx\NeoxQrCodeBundle\Enum\AlignmentShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\ErrorCorrection;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderEyeShape;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderFrameShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\GradientType;
 use Xorgxx\NeoxQrCodeBundle\Enum\ModuleShape;
@@ -122,6 +124,53 @@ final class QrCodeGeneratorTest extends TestCase
         }
     }
 
+    public function testLiquidModulesRenderAsAnOrganicFilteredGroup(): void
+    {
+        $result = $this->generator->generate('liquid modules', new QrStyle(moduleShape: ModuleShape::Liquid));
+
+        self::assertStringContainsString('<feGaussianBlur in="SourceGraphic" stdDeviation="0.4"/>', $result->svg);
+        self::assertStringContainsString('<feColorMatrix type="matrix"', $result->svg);
+        self::assertMatchesRegularExpression('/<g filter="url\\(#neoxLiquidFilter_[a-f0-9]+\\)">.+<\\/g>/s', $result->svg);
+    }
+
+    public function testLiquidRenderingKeepsFinderPatternsOutsideTheFilter(): void
+    {
+        $result = $this->generator->generate('liquid finders', new QrStyle(moduleShape: ModuleShape::Liquid));
+
+        $filterStart = strpos($result->svg, '<g filter="url(#neoxLiquidFilter_');
+        self::assertNotFalse($filterStart);
+        $filteredGroupEnd = strpos($result->svg, '</g>', $filterStart);
+        self::assertNotFalse($filteredGroupEnd);
+
+        $firstFinderAfterGroup = strpos($result->svg, 'width="7.0000"', $filteredGroupEnd);
+        self::assertNotFalse($firstFinderAfterGroup, 'Finder frames must stay crisp and outside the liquid metaball filter.');
+    }
+
+    public function testConnectedModuleShapesRenderNeighborBridges(): void
+    {
+        foreach ([ModuleShape::Blob, ModuleShape::Wave, ModuleShape::Cross] as $shape) {
+            $result = $this->generator->generate('connected '.$shape->value, new QrStyle(moduleShape: $shape));
+
+            self::assertStringContainsString('data-module-shape="'.$shape->value.'"', $result->svg);
+            self::assertStringContainsString('stroke-linecap="round"', $result->svg);
+        }
+    }
+
+    public function testWaveModulesUseCurvedBridges(): void
+    {
+        $result = $this->generator->generate('wave bridges', new QrStyle(moduleShape: ModuleShape::Wave));
+
+        self::assertMatchesRegularExpression('/<path d="M [^"]+ Q [^"]+"/', $result->svg);
+    }
+
+    public function testCrossModulesUseCrossNodesAndNeighborBridges(): void
+    {
+        $result = $this->generator->generate('cross bridges', new QrStyle(moduleShape: ModuleShape::Cross));
+
+        self::assertStringContainsString('L 0.65 0.35', $result->svg);
+        self::assertStringContainsString('stroke-linecap="round"', $result->svg);
+    }
+
     public function testGenerateAllFinderShapes(): void
     {
         foreach (FinderShape::cases() as $shape) {
@@ -229,13 +278,13 @@ final class QrCodeGeneratorTest extends TestCase
         self::assertSame(9, substr_count($result->svg, '<circle'));
     }
 
-    public function testFinderDiamondShapeRendersUnifiedRing(): void
+    public function testLegacyFinderDiamondUsesCanonicalFrameAndDiamondEye(): void
     {
         $style = new QrStyle(finderShape: FinderShape::Diamond);
         $result = $this->generator->generate('test', $style);
 
-        // 3 finders x 3 unified diamond paths (outer ring + background cutout + eye) = 9.
-        self::assertSame(9, substr_count($result->svg, '<path'));
+        // The outer frame is canonical; only the three eyes remain decorative.
+        self::assertSame(3, substr_count($result->svg, '<path'));
     }
 
     public function testFinderCenterShapeOverridesEye(): void
@@ -253,6 +302,55 @@ final class QrCodeGeneratorTest extends TestCase
 
         // Outer 7x7 = rect, 5x5 cutout = rect, 3x3 eye = circle → 3 circles total
         self::assertSame(3, substr_count($result->svg, '<circle'));
+    }
+
+    public function testExplicitSafeFrameWithDecorativeStarEye(): void
+    {
+        $style = new QrStyle(
+            finderShape: FinderShape::Square,
+            finderFrameShape: FinderFrameShape::Rounded,
+            finderEyeShape: FinderEyeShape::Star,
+        );
+        $result = $this->generator->generate('test', $style);
+
+        self::assertSame(3, substr_count($result->svg, '<path'));
+        self::assertStringContainsString('rx=', $result->svg);
+        self::assertStringNotContainsString('scale(4.2000)', $result->svg);
+        self::assertStringContainsString('scale(3.2000)', $result->svg);
+        self::assertStringContainsString('L 0.718 0.201', $result->svg);
+    }
+
+    public function testLegacyStarFinderKeepsCanonicalFrame(): void
+    {
+        $style = new QrStyle(finderShape: FinderShape::Star);
+        $result = $this->generator->generate('test', $style);
+
+        self::assertSame(3, substr_count($result->svg, '<path'));
+        self::assertStringContainsString('<rect', $result->svg);
+    }
+
+    public function testGenerateAllFinderEyeShapes(): void
+    {
+        foreach (FinderEyeShape::cases() as $shape) {
+            $style = new QrStyle(
+                finderFrameShape: FinderFrameShape::Square,
+                finderEyeShape: $shape,
+            );
+            $result = $this->generator->generate('test', $style);
+
+            self::assertNotEmpty($result->svg, sprintf('SVG should not be empty for finder eye %s.', $shape->value));
+        }
+    }
+
+    public function testFinderEyeScaleChangesDecorativeEyeSize(): void
+    {
+        $style = new QrStyle(
+            finderEyeShape: FinderEyeShape::Star,
+            finderEyeScale: 1.05,
+        );
+        $result = $this->generator->generate('test', $style);
+
+        self::assertStringContainsString('scale(3.3600)', $result->svg);
     }
 
     public function testFinderEyeShapeTakesPriorityOverCenterShape(): void
@@ -352,20 +450,21 @@ final class QrCodeGeneratorTest extends TestCase
         self::assertStringContainsString('<path', $result->svg);
     }
 
-    public function testFinderDottedShapeRendersCircles(): void
+    public function testLegacyDottedFinderFallsBackToCanonicalFrame(): void
     {
         $style = new QrStyle(finderShape: FinderShape::Dotted);
         $result = $this->generator->generate('test', $style);
 
-        self::assertStringContainsString('<circle', $result->svg);
+        self::assertStringContainsString('<rect', $result->svg);
     }
 
-    public function testFinderMinimalShapeRendersCornerBrackets(): void
+    public function testLegacyMinimalFinderFallsBackToCanonicalFrame(): void
     {
         $style = new QrStyle(finderShape: FinderShape::Minimal);
         $result = $this->generator->generate('test', $style);
 
-        self::assertStringContainsString('stroke-linecap="square"', $result->svg);
+        self::assertStringNotContainsString('stroke-linecap="square"', $result->svg);
+        self::assertStringContainsString('<rect', $result->svg);
     }
 
     public function testFinderInvertedShapeRendersFullPattern(): void

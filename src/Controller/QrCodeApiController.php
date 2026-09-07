@@ -9,13 +9,17 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Xorgxx\NeoxQrCodeBundle\Decoder\QrDecoderInterface;
 use Xorgxx\NeoxQrCodeBundle\Enum\AlignmentShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\ErrorCorrection;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderEffect;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderEyeShape;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderFrameShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\FrameShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\GradientType;
 use Xorgxx\NeoxQrCodeBundle\Enum\ModuleShape;
+use Xorgxx\NeoxQrCodeBundle\Enum\ReadabilityProfile;
 use Xorgxx\NeoxQrCodeBundle\Model\QrFrameStyle;
 use Xorgxx\NeoxQrCodeBundle\Model\QrStyle;
 use Xorgxx\NeoxQrCodeBundle\Renderer\PngRenderer;
@@ -32,6 +36,7 @@ final class QrCodeApiController extends AbstractController
         private readonly QrStyleValidator $validator,
         private readonly QrPresetRegistry $presets,
         private readonly PngRenderer $pngRenderer,
+        private readonly QrDecoderInterface $decoder,
     ) {
     }
 
@@ -96,12 +101,35 @@ final class QrCodeApiController extends AbstractController
     public function validate(Request $request): JsonResponse
     {
         try {
-            [, $style, $ec] = $this->payload($request);
-            $report = $this->validator->validate($style, $ec);
+            [$content, $style, $ec, $preset, $frame, $profile] = $this->payload($request);
+            if (null !== $preset) {
+                $config = $this->presets->get($preset);
+                $style = $config['style'];
+                $frame = $config['frame'] ?? null;
+            }
+            $report = $this->validator->validate($style, $ec, $frame, $profile);
+            $decode = null;
+            if ($report->valid && '' !== $content) {
+                $result = null !== $preset
+                    ? $this->generator->generatePreset($content, $preset, $ec)
+                    : $this->generator->generate($content, $style, $ec, $frame);
+                $decode = $this->decoder->decode($result->svg, $content, $profile);
+            }
 
             return $this->json([
                 'valid' => $report->valid,
                 'contrastRatio' => round($report->contrastRatio, 2),
+                'readabilityScore' => $report->readabilityScore,
+                'readabilityDetails' => $report->readabilityDetails,
+                'estimated' => true,
+                'testProfile' => $profile->value,
+                'testSizes' => $profile->sizes(),
+                'serverDecode' => null === $decode ? null : [
+                    'available' => $decode->available,
+                    'successfulSizes' => $decode->successfulSizes,
+                    'decodedContentMatches' => null !== $decode->decodedContent ? hash_equals($content, $decode->decodedContent) : null,
+                    'message' => $decode->message,
+                ],
                 'errors' => $report->errors,
                 'warnings' => $report->warnings,
             ], $report->valid ? 200 : 422);
@@ -145,7 +173,7 @@ final class QrCodeApiController extends AbstractController
         return $this->json(['ok' => true]);
     }
 
-    /** @return array{string,QrStyle,ErrorCorrection,?string,?QrFrameStyle} */
+    /** @return array{string,QrStyle,ErrorCorrection,?string,?QrFrameStyle,ReadabilityProfile} */
     private function payload(Request $request): array
     {
         $data = $request->toArray();
@@ -176,8 +204,12 @@ final class QrCodeApiController extends AbstractController
                 ? ModuleShape::from((string) $data['finderCenterShape'])
                 : null,
             finderEyeShape: isset($data['finderEyeShape']) && '' !== $data['finderEyeShape']
-                ? FinderShape::from((string) $data['finderEyeShape'])
+                ? FinderEyeShape::from((string) $data['finderEyeShape'])
                 : null,
+            finderFrameShape: isset($data['finderFrameShape']) && '' !== $data['finderFrameShape']
+                ? FinderFrameShape::from((string) $data['finderFrameShape'])
+                : null,
+            finderEyeScale: (float) ($data['finderEyeScale'] ?? 1.0),
         );
 
         $frameShape = FrameShape::from((string) ($data['frameShape'] ?? 'none'));
@@ -192,6 +224,13 @@ final class QrCodeApiController extends AbstractController
             )
             : null;
 
-        return [$content, $style, ErrorCorrection::from((string) ($data['errorCorrection'] ?? 'H')), $preset, $frame];
+        return [
+            $content,
+            $style,
+            ErrorCorrection::from((string) ($data['errorCorrection'] ?? 'H')),
+            $preset,
+            $frame,
+            ReadabilityProfile::from((string) ($data['testProfile'] ?? 'balanced')),
+        ];
     }
 }

@@ -6,6 +6,8 @@ namespace Xorgxx\NeoxQrCodeBundle\Renderer;
 
 use Xorgxx\NeoxQrCodeBundle\Enum\AlignmentShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderEffect;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderEyeShape;
+use Xorgxx\NeoxQrCodeBundle\Enum\FinderFrameShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\FinderShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\GradientType;
 use Xorgxx\NeoxQrCodeBundle\Enum\ModuleShape;
@@ -44,8 +46,9 @@ final class SvgRenderer
         $modulePaint = $fg;
         $finderPaint = $finderColor;
         $alignmentPositions = $this->alignmentPatternCenters($n);
-        $ringFamily = [FinderShape::Square, FinderShape::Rounded, FinderShape::Circle, FinderShape::Diamond, FinderShape::Leaf, FinderShape::Hexagon, FinderShape::Star];
-        $skipFinderModules = in_array($style->finderShape, [FinderShape::Minimal, FinderShape::Inverted, ...$ringFamily], true);
+        // Finder frames are always rendered as a canonical unified ring.
+        // Legacy decorative finderShape values are mapped to a safe frame and decorative eye.
+        $skipFinderModules = true;
 
         $uid = bin2hex(random_bytes(4));
         $gradientId = 'neoxQrGradient_'.$uid;
@@ -77,6 +80,8 @@ final class SvgRenderer
 
         if (ModuleShape::Liquid === $style->moduleShape) {
             $svg .= $this->renderLiquidModules($matrix, $n, $style, $modulePaint, $alignmentColor, $alignmentPositions, $skipFinderModules, $finderPaint, $liquidFilterId);
+        } elseif (in_array($style->moduleShape, [ModuleShape::Blob, ModuleShape::Wave, ModuleShape::Cross], true)) {
+            $svg .= $this->renderConnectedModules($matrix, $n, $style, $modulePaint, $alignmentPositions);
         } else {
             for ($y = 0; $y < $n; ++$y) {
                 for ($x = 0; $x < $n; ++$x) {
@@ -88,9 +93,6 @@ final class SvgRenderer
                     $py = $y + $style->margin;
 
                     if ($this->isFinderArea($x, $y, $n)) {
-                        if (!$skipFinderModules) {
-                            $svg .= $this->renderFinderCell($px, $py, $style->finderShape, $finderPaint, $style->moduleScale);
-                        }
                         continue;
                     }
 
@@ -105,7 +107,6 @@ final class SvgRenderer
 
         $svg .= '</g>';
         $svg .= $this->renderAlignmentRings($alignmentPositions, $style, $alignmentColor);
-        $svg .= $this->renderFinderPatterns($matrix, $n, $style, $finderPaint);
         $svg .= $this->renderFinderRings($n, $style, $finderPaint);
         $svg .= $this->renderFinderIcons($n, $style);
         $svg .= $this->renderFinderOutline($n, $style, $finderColor);
@@ -207,6 +208,116 @@ final class SvgRenderer
         return '<g filter="url(#'.$liquidFilterId.')">'.$dataSvg.'</g>'.$otherSvg;
     }
 
+    /**
+     * Draws topology-aware module shapes and bridges only orthogonally
+     * adjacent dark data cells. Functional QR patterns remain untouched.
+     *
+     * @param array<int, array{int,int}> $alignmentPositions
+     */
+    private function renderConnectedModules(
+        QrMatrix $matrix,
+        int $n,
+        QrStyle $style,
+        string $paint,
+        array $alignmentPositions,
+    ): string {
+        $bridges = '';
+        $modules = '';
+        $scale = $style->moduleScale;
+        $nodeScale = match ($style->moduleShape) {
+            ModuleShape::Blob => $scale,
+            ModuleShape::Wave => $scale * 0.76,
+            ModuleShape::Cross => $scale,
+            default => $scale,
+        };
+        $bridgeWidth = match ($style->moduleShape) {
+            ModuleShape::Blob => $scale * 0.56,
+            ModuleShape::Wave => $scale * 0.30,
+            ModuleShape::Cross => $scale * 0.24,
+            default => $scale * 0.40,
+        };
+
+        for ($y = 0; $y < $n; ++$y) {
+            for ($x = 0; $x < $n; ++$x) {
+                if (!$this->isDataModule($matrix, $x, $y, $n, $alignmentPositions)) {
+                    continue;
+                }
+
+                $cx = $x + $style->margin + 0.5;
+                $cy = $y + $style->margin + 0.5;
+                $pad = (1.0 - $nodeScale) / 2;
+
+                $modules .= $this->shapes->renderModule(
+                    $style->moduleShape,
+                    $x + $style->margin + $pad,
+                    $y + $style->margin + $pad,
+                    $nodeScale,
+                    $paint,
+                );
+
+                if ($this->isDataModule($matrix, $x + 1, $y, $n, $alignmentPositions)) {
+                    $bridges .= $this->renderModuleBridge($style->moduleShape, $cx, $cy, $cx + 1, $cy, $bridgeWidth, $paint, 0 === ($x + $y) % 2);
+                }
+                if ($this->isDataModule($matrix, $x, $y + 1, $n, $alignmentPositions)) {
+                    $bridges .= $this->renderModuleBridge($style->moduleShape, $cx, $cy, $cx, $cy + 1, $bridgeWidth, $paint, 0 === ($x + $y) % 2);
+                }
+            }
+        }
+
+        return sprintf('<g data-module-shape="%s">%s%s</g>', $style->moduleShape->value, $bridges, $modules);
+    }
+
+    private function renderModuleBridge(
+        ModuleShape $shape,
+        float $x1,
+        float $y1,
+        float $x2,
+        float $y2,
+        float $width,
+        string $paint,
+        bool $positiveCurve,
+    ): string {
+        if (ModuleShape::Wave === $shape) {
+            $offset = $positiveCurve ? 0.18 : -0.18;
+            $cx = ($x1 + $x2) / 2 + (abs($y2 - $y1) > 0 ? $offset : 0);
+            $cy = ($y1 + $y2) / 2 + (abs($x2 - $x1) > 0 ? $offset : 0);
+
+            return sprintf(
+                '<path d="M %.4F %.4F Q %.4F %.4F %.4F %.4F" fill="none" stroke="%s" stroke-width="%.4F" stroke-linecap="round"/>',
+                $x1,
+                $y1,
+                $cx,
+                $cy,
+                $x2,
+                $y2,
+                $paint,
+                $width,
+            );
+        }
+
+        return sprintf(
+            '<path d="M %.4F %.4F L %.4F %.4F" fill="none" stroke="%s" stroke-width="%.4F" stroke-linecap="round"/>',
+            $x1,
+            $y1,
+            $x2,
+            $y2,
+            $paint,
+            $width,
+        );
+    }
+
+    /** @param array<int, array{int,int}> $alignmentPositions */
+    private function isDataModule(QrMatrix $matrix, int $x, int $y, int $n, array $alignmentPositions): bool
+    {
+        return $x >= 0
+            && $y >= 0
+            && $x < $n
+            && $y < $n
+            && $matrix->isDark($x, $y)
+            && !$this->isFinderArea($x, $y, $n)
+            && !$this->isAlignmentArea($x, $y, $alignmentPositions);
+    }
+
     private function renderFinderCell(float $x, float $y, FinderShape $shape, string $color, float $scale): string
     {
         $s = match ($shape) {
@@ -224,119 +335,80 @@ final class SvgRenderer
         return [[0, 0], [$n - 7, 0], [0, $n - 7]];
     }
 
-    private function renderFinderPatterns(QrMatrix $matrix, int $n, QrStyle $style, string $paint): string
-    {
-        if (!in_array($style->finderShape, [FinderShape::Minimal, FinderShape::Inverted], true)) {
-            return '';
-        }
-
-        $bg = $this->escape($style->background);
-        $svg = '';
-
-        foreach ($this->finderAnchors($n) as [$fx, $fy]) {
-            if (FinderShape::Inverted === $style->finderShape) {
-                for ($dy = 0; $dy < 7; ++$dy) {
-                    for ($dx = 0; $dx < 7; ++$dx) {
-                        $color = $matrix->isDark($fx + $dx, $fy + $dy) ? $bg : $paint;
-                        $px = $fx + $dx + $style->margin;
-                        $py = $fy + $dy + $style->margin;
-                        $svg .= sprintf('<rect x="%.4F" y="%.4F" width="1" height="1" fill="%s"/>', $px, $py, $color);
-                    }
-                }
-                continue;
-            }
-
-            $svg .= $this->cornerBrackets($fx + $style->margin, $fy + $style->margin, 7.0, 2.2, 0.6, $paint);
-        }
-
-        return $svg;
-    }
-
-    /**
-     * Renders geometric finder shapes (square, rounded, circle, diamond,
-     * leaf, hexagon, star) as three concentric solid shapes (7x7 ring,
-     * 5x5 background cutout, 3x3 eye) instead of a mosaic of individually
-     * shaped modules. This produces a genuinely continuous outline rather
-     * than a ring of disconnected dots/points.
-     */
+    /** Renders a safe 7x7/5x5 frame with a separately styled 3x3 eye. */
     private function renderFinderRings(int $n, QrStyle $style, string $color): string
     {
-        $ringFamily = [FinderShape::Square, FinderShape::Rounded, FinderShape::Circle, FinderShape::Diamond, FinderShape::Leaf, FinderShape::Hexagon, FinderShape::Star];
-        if (!in_array($style->finderShape, $ringFamily, true)) {
-            return '';
-        }
-
         $bg = $this->escape($style->background);
+        $frameShape = $this->resolveFinderFrameShape($style);
+        $eyeShape = $this->resolveFinderEyeShape($style);
 
         $svg = '';
         foreach ($this->finderAnchors($n) as [$fx, $fy]) {
             $x = $fx + $style->margin;
             $y = $fy + $style->margin;
 
-            $svg .= $this->renderRingBlock($x, $y, 7.0, $style->finderShape, $color);
-            $svg .= $this->renderRingBlock($x + 1, $y + 1, 5.0, $style->finderShape, $bg);
+            $svg .= $this->shapes->renderFinderFrame($frameShape, $x, $y, 7.0, $color);
+            $svg .= $this->shapes->renderFinderFrame($frameShape, $x + 1, $y + 1, 5.0, $bg);
 
-            if (null !== $style->finderEyeShape) {
-                $eye = $style->finderEyeShape;
-                $pathBased = [FinderShape::Leaf, FinderShape::Hexagon, FinderShape::Star];
-                if (in_array($eye, $pathBased, true)) {
-                    $eyeSize = 4.2;
-                    $eyeOffset = 2 + (3.0 - $eyeSize) / 2;
-                    $svg .= $this->renderRingBlock($x + $eyeOffset, $y + $eyeOffset, $eyeSize, $eye, $color);
-                } else {
-                    $svg .= $this->renderRingBlock($x + 2, $y + 2, 3.0, $eye, $color);
-                }
+            if (null !== $eyeShape) {
+                $eyeSize = $this->finderEyeSize($eyeShape) * $style->finderEyeScale;
+                $eyeOffset = (7.0 - $eyeSize) / 2;
+                $svg .= $this->shapes->renderFinderEye($eyeShape, $x + $eyeOffset, $y + $eyeOffset, $eyeSize, $color);
+            } elseif (null !== $style->finderCenterShape) {
+                $svg .= $this->renderEyeShape($x + 2, $y + 2, 3.0, $style->finderCenterShape, $color);
             } else {
-                $eyeShape = $style->finderCenterShape ?? match ($style->finderShape) {
-                    FinderShape::Circle => ModuleShape::Dot,
-                    FinderShape::Diamond => ModuleShape::Diamond,
-                    FinderShape::Rounded => ModuleShape::Rounded,
-                    FinderShape::Leaf, FinderShape::Hexagon, FinderShape::Star => ModuleShape::Dot,
-                    default => ModuleShape::Square,
-                };
-                $svg .= $this->renderEyeShape($x + 2, $y + 2, 3.0, $eyeShape, $color);
+                $svg .= $this->renderEyeShape($x + 2, $y + 2, 3.0, ModuleShape::Square, $color);
             }
         }
 
         return $svg;
     }
 
-    private function renderRingBlock(float $x, float $y, float $size, FinderShape $shape, string $color): string
+    private function finderEyeSize(FinderEyeShape $shape): float
     {
-        return $this->shapes->renderFinder($shape, $x, $y, $size, $color);
+        return match ($shape) {
+            FinderEyeShape::Square, FinderEyeShape::Rounded, FinderEyeShape::Circle => 3.0,
+            default => 3.2,
+        };
+    }
+
+    private function resolveFinderFrameShape(QrStyle $style): FinderFrameShape
+    {
+        if (null !== $style->finderFrameShape) {
+            return $style->finderFrameShape;
+        }
+
+        return match ($style->finderShape) {
+            FinderShape::Rounded => FinderFrameShape::Rounded,
+            FinderShape::Circle => FinderFrameShape::Circle,
+            default => FinderFrameShape::Square,
+        };
+    }
+
+    private function resolveFinderEyeShape(QrStyle $style): ?FinderEyeShape
+    {
+        if (null !== $style->finderEyeShape) {
+            return FinderEyeShape::tryFrom($style->finderEyeShape->value);
+        }
+
+        if (null !== $style->finderCenterShape) {
+            return null;
+        }
+
+        return match ($style->finderShape) {
+            FinderShape::Rounded => FinderEyeShape::Rounded,
+            FinderShape::Circle => FinderEyeShape::Circle,
+            FinderShape::Diamond => FinderEyeShape::Diamond,
+            FinderShape::Leaf => FinderEyeShape::Leaf,
+            FinderShape::Hexagon => FinderEyeShape::Hexagon,
+            FinderShape::Star => FinderEyeShape::Star,
+            default => FinderEyeShape::Square,
+        };
     }
 
     private function renderEyeShape(float $x, float $y, float $size, ModuleShape $shape, string $color): string
     {
         return $this->shapes->renderModule($shape, $x, $y, $size, $color);
-    }
-
-    private function cornerBrackets(float $x, float $y, float $size, float $len, float $strokeWidth, string $paint): string
-    {
-        $corners = [
-            [$x, $y, 1, 1],
-            [$x + $size, $y, -1, 1],
-            [$x, $y + $size, 1, -1],
-            [$x + $size, $y + $size, -1, -1],
-        ];
-        $svg = '';
-        foreach ($corners as [$cx, $cy, $dx, $dy]) {
-            $svg .= sprintf(
-                '<path d="M %.4F %.4F L %.4F %.4F M %.4F %.4F L %.4F %.4F" stroke="%s" stroke-width="%.4F" stroke-linecap="square" fill="none"/>',
-                $cx,
-                $cy + $dy * $len,
-                $cx,
-                $cy,
-                $cx,
-                $cy,
-                $cx + $dx * $len,
-                $cy,
-                $paint,
-                $strokeWidth
-            );
-        }
-
-        return $svg;
     }
 
     private function renderFinderShadow(int $n, QrStyle $style): string

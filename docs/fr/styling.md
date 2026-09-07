@@ -9,30 +9,34 @@ La matrice QR n'est jamais modérée cosmétiquement. Seuls les modules actifs s
 - `dot` -> `<circle>`
 - `diamond` -> `<path>` SVG
 - `heart` -> `<path>` SVG normalisé
-- `liquid` -> tous les modules de données adjacents (horizontal, vertical, diagonal) sont fusionnés en formes continues via un filtre metaball SVG (flou gaussien + seuil alpha), créant une apparence liquide/fluide
+- `liquid` -> les modules de données adjacents (horizontal, vertical, diagonal) sont fusionnés via un filtre metaball SVG
+- `blob` -> modules ronds reliés aux voisins sombres orthogonaux par de larges ponts arrondis
+- `wave` -> modules ronds compacts reliés par des ponts quadratiques ondulés et alternés
+- `cross` -> modules en croix reliés par des ponts fins et arrondis
 
-## Formes de finder
+Le filtre liquide est limité aux modules de données ordinaires. Les cadres des finders et les motifs d'alignement sont rendus ensuite, sans filtre, afin de conserver une géométrie fonctionnelle nette. Le score de validation applique une pénalité de cinq points et émet un avertissement ; testez chaque taille d'affichage ou d'impression prévue avec de vrais scanners.
 
-Les finders (les trois carrés d'angle) sont rendus indépendamment des modules de données ordinaires.
+## Cadre et œil des finders
+
+Les finders (les trois repères d'angle) sont rendus indépendamment des modules de données ordinaires. Leur cadre fonctionnel est limité à `square`, `rounded` ou `circle` afin de conserver une structure détectable par les scanners.
 
 - `square` -> `<rect>`
 - `rounded` -> `<rect>` arrondi
 - `circle` -> `<circle>`
-- `diamond` -> `<path>` SVG
-- `leaf` -> `<path>` SVG
-- `hexagon` -> `<path>` SVG
-- `star` -> `<path>` SVG
-- `dotted` -> petits `<circle>` par module (aspect anneau pointillé)
-- `minimal` -> crochets d'angle uniquement (pas de remplissage anneau/carré)
-- `inverted` -> les couleurs du finder sont inversées (sombre <-> fond)
 
 Un `finderColor` séparé peut être défini pour différencier les finders des modules de données.
 
-`square`, `rounded`, `circle` et `diamond` sont rendus comme **trois formes concentriques unifiées** (anneau extérieur 7x7, découpe 5x5, œil 3x3) au lieu d'une mosaïque de modules individuels. Cela garantit un contour véritablement continu pour `circle` et `diamond`.
+Le cadre et sa découpe sont rendus comme deux formes concentriques unifiées (7x7 et 5x5). Les anciennes valeurs décoratives de `finderShape` restent acceptées : elles utilisent désormais un cadre carré canonique et appliquent leur forme uniquement à l'œil.
 
 ### Forme de l'œil du finder
 
-`finderEyeShape` contrôle indépendamment le bloc 3x3 central (« œil ») du finder, en utilisant la même enum `FinderShape` que l'anneau extérieur. Quand omis, il utilise par défaut une forme correspondant à l'anneau extérieur. Cela permet de mélanger, par exemple, un anneau carré avec un œil rond.
+`finderEyeShape` contrôle indépendamment le bloc 3x3 central (« œil »), avec `square`, `rounded`, `circle`, `diamond`, `leaf`, `hexagon`, `star`, `octagon`, `shield`, `heart` ou `flower` (fleur simple à quatre pétales). `finderFrameShape` contrôle le cadre sûr.
+
+L'œil `star` utilise un chemin spécifique plus massif que l'étoile décorative générale. Ses creux sont moins profonds afin de conserver suffisamment de surface sombre.
+
+Les yeux décoratifs sont rendus sur 3,2 modules, contre 3 modules pour les formes classiques. Ils restent centrés et ne réduisent la séparation claire que de 0,1 module de chaque côté.
+
+`finderEyeScale` permet d'ajuster cette taille entre `0.85` et `1.08`. La valeur par défaut est `1.0`; augmenter la valeur réduit la séparation claire et diminue légèrement le score estimé.
 
 `finderCenterShape` (legacy) contrôle aussi l'œil mais utilise les valeurs de `ModuleShape`. Si les deux sont définis, `finderEyeShape` a priorité.
 

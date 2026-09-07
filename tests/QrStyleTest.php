@@ -17,6 +17,13 @@ final class QrStyleTest extends TestCase
         self::assertSame(ModuleShape::Heart, $style->moduleShape);
     }
 
+    public function testStyleAcceptsLiquidModules(): void
+    {
+        $style = new QrStyle(moduleShape: ModuleShape::Liquid);
+
+        self::assertSame(ModuleShape::Liquid, $style->moduleShape);
+    }
+
     public function testInvalidColorIsRejected(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -45,5 +52,11 @@ final class QrStyleTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         new QrStyle(finderEffect: FinderEffect::Gradient, finderGradientTo: 'not-a-color');
+    }
+
+    public function testFinderEyeScaleOutOfRangeThrows(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new QrStyle(finderEyeScale: 1.09);
     }
 }

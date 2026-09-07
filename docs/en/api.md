@@ -14,6 +14,12 @@ Returns the logical QR matrix as JSON.
 ## POST `/api/qrcode/validate`
 Returns style reliability diagnostics.
 
+The response includes `readabilityScore` (0 to 100), `readabilityDetails`, and `estimated: true`. Details include margin, module scale and shape, eye, error correction, logo, and frame. It does not guarantee that a particular device will decode the QR.
+
+`moduleShape` accepts `square`, `rounded`, `dot`, `diamond`, `heart`, `liquid`, `blob`, `wave`, or `cross`. The connected shapes are rendered by the canonical SVG renderer while finder and alignment patterns remain isolated. `liquid` uses a metaball filter; `blob`, `wave`, and `cross` add explicit bridges only between orthogonally adjacent dark data cells. Their estimated-readability penalties are respectively 5, 4, 7, and 8 points, with a scan-test warning.
+
+`testProfile` accepts `compact` (96/128/256), `balanced` (128/256/512), or `print` (256/512/1024). `serverDecode` reports whether an optional server decoder is available and which sizes succeeded.
+
 ## GET `/api/qrcode/presets`
 Returns built-in preset names.
 
@@ -23,8 +29,9 @@ Example payload:
 {
   "content": "https://example.com",
   "size": 500,
-  "moduleShape": "dot",
-  "finderShape": "rounded",
+  "moduleShape": "liquid",
+  "finderFrameShape": "rounded",
+  "finderEyeShape": "star",
   "foreground": "#111111",
   "background": "#ffffff",
   "gradientType": "linear",
@@ -43,7 +50,7 @@ Example payload:
 }
 ```
 
-See `docs/styling.md` for all `finderShape`, `finderEffect`, and `frameShape` values.
+See `docs/styling.md` for all `finderFrameShape`, `finderEyeShape`, `finderEffect`, and `frameShape` values.
 
 For a public API, add your own authentication/rate limiter/firewall rules. The package intentionally does not publish an unauthenticated endpoint that creates signed security tokens.
 

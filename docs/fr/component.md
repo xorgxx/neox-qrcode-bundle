@@ -8,7 +8,8 @@
     size="400"
     margin="4"
     moduleShape="heart"
-    finderShape="rounded"
+    finderFrameShape="rounded"
+    finderEyeShape="star"
     foreground="#111111"
     background="#ffffff"
     finderColor="#D59618"
@@ -18,8 +19,8 @@
 />
 ```
 
-Formes de modules supportées : `square`, `rounded`, `dot`, `diamond`, `heart`.
-Formes de finder supportées : `square`, `rounded`, `circle`, `diamond`, `leaf`, `hexagon`, `star`, `dotted`, `minimal`, `inverted`.
+Formes de modules supportées : `square`, `rounded`, `dot`, `diamond`, `heart`, `liquid`, `blob`, `wave`, `cross`.
+Cadres de finder supportés : `square`, `rounded`, `circle`. Formes d'œil : `square`, `rounded`, `circle`, `diamond`, `leaf`, `hexagon`, `star`, `octagon`, `shield`, `heart`, `flower`. `finderShape` reste disponible pour la compatibilité.
 Types de dégradé : `none`, `linear`, `radial`.
 
 ## Logo
@@ -41,7 +42,7 @@ Pour des raisons de sécurité, les URLs de logo sont limitées aux URLs relativ
 ```twig
 <twig:NeoxQrCode
     content="https://example.com"
-    finderShape="rounded"
+    finderFrameShape="rounded"
     finderIconHref="/images/icon.svg"
     finderIconScale="0.6"
     finderEffect="double_stroke"

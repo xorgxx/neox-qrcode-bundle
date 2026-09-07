@@ -12,4 +12,7 @@ enum ModuleShape: string
     case Diamond = 'diamond';
     case Heart = 'heart';
     case Liquid = 'liquid';
+    case Blob = 'blob';
+    case Wave = 'wave';
+    case Cross = 'cross';
 }

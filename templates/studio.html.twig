@@ -33,8 +33,24 @@
             flex-wrap: wrap;
             gap: .5rem;
         }
+        .neox-studio__title { display: flex; align-items: center; gap: .75rem; }
         header.neox-studio__header h1 { margin: 0; font-size: 1.4rem; letter-spacing: .02em; }
         header.neox-studio__header span { color: var(--neox-muted); font-size: .9rem; }
+        .neox-studio__back {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            border: 1px solid var(--neox-border);
+            border-radius: 8px;
+            padding: .4rem .65rem;
+            background: var(--neox-panel);
+            color: var(--neox-text);
+            font: inherit;
+            font-size: .82rem;
+            cursor: pointer;
+        }
+        .neox-studio__back:hover { border-color: var(--neox-accent); color: var(--neox-accent); }
+        .neox-studio__back:focus-visible { outline: 2px solid var(--neox-accent); outline-offset: 2px; }
         main.neox-studio {
             display: grid;
             grid-template-columns: minmax(280px, 340px) 1fr;
@@ -171,7 +187,18 @@
         }
         button.neox-btn:hover { border-color: var(--neox-accent); transform: translateY(-1px); }
         button.neox-btn.neox-btn--primary { background: var(--neox-accent); color: #14110a; border-color: var(--neox-accent); font-weight: 600; }
-        .neox-status { min-height: 1.4em; font-size: .85rem; text-align: center; }
+        .neox-status { min-height: 1.4em; font-size: .78rem; text-align: left; }
+        .neox-preview > .neox-status {
+            grid-column: 2;
+            grid-row: 2;
+            align-self: start;
+            max-width: 180px;
+            line-height: 1.35;
+        }
+        .neox-readability-gauge { grid-column: 2; grid-row: 2; width: 180px; align-self: start; accent-color: var(--neox-accent-2); }
+        .neox-readability-gauge.is-warning { accent-color: var(--neox-accent); }
+        .neox-readability-gauge.is-error { accent-color: var(--neox-danger); }
+        .neox-preview > .neox-status { grid-row: 3; }
         .neox-status.is-error { color: var(--neox-danger); }
         .neox-status.is-warning { color: var(--neox-accent); }
         .neox-status.is-ok { color: var(--neox-accent-2); }
@@ -182,7 +209,12 @@
 </head>
 <body>
 <header class="neox-studio__header">
-    <h1>Neox QR Code Studio</h1>
+    <div class="neox-studio__title">
+        <button type="button" id="neox-back" class="neox-studio__back" aria-label="Retourner à la page précédente">
+            <span aria-hidden="true">←</span> Retour
+        </button>
+        <h1>Neox QR Code Studio</h1>
+    </div>
     <span>Aperçu 100% dynamique, généré côté serveur via l'API Neox QR Code</span>
 </header>
 
@@ -232,6 +264,9 @@
                             <option value="diamond">Diamond</option>
                             <option value="heart">Heart</option>
                             <option value="liquid">Liquid</option>
+                            <option value="blob">Blob + ponts</option>
+                            <option value="wave">Wave + ponts</option>
+                            <option value="cross">Cross + ponts</option>
                         </select>
                         <input type="color" id="neox-foreground" value="#111111" title="Couleur modules">
                     </div>
@@ -243,19 +278,12 @@
             <summary>Repères</summary>
             <div class="neox-grid">
                 <div class="neox-field">
-                    <label for="neox-finderShape">Forme &amp; couleur</label>
+                    <label for="neox-finderShape">Cadre &amp; couleur</label>
                     <div class="neox-inline">
                         <select id="neox-finderShape">
                             <option value="square">Square</option>
                             <option value="rounded">Rounded</option>
                             <option value="circle">Circle</option>
-                            <option value="diamond">Diamond</option>
-                            <option value="leaf">Leaf</option>
-                            <option value="hexagon">Hexagon</option>
-                            <option value="star">Star</option>
-                            <option value="dotted">Dotted</option>
-                            <option value="minimal">Minimal</option>
-                            <option value="inverted">Inverted</option>
                         </select>
                         <input type="color" id="neox-finderColor" value="#111111" title="Couleur repères">
                     </div>
@@ -271,7 +299,13 @@
                         <option value="leaf">Feuille</option>
                         <option value="hexagon">Hexagone</option>
                         <option value="star">Étoile</option>
+                        <option value="octagon">Octogone</option>
+                        <option value="shield">Bouclier</option>
+                        <option value="heart">Cœur</option>
+                        <option value="flower">Fleur à 4 pétales</option>
                     </select>
+                    <label for="neox-finderEyeScale">Taille de l'œil</label>
+                    <input type="range" id="neox-finderEyeScale" min="0.85" max="1.08" step="0.01" value="1">
                 </div>
                 <div class="neox-field">
                     <label for="neox-finderEffect">Effet &amp; dégradé</label>
@@ -375,6 +409,14 @@
                 <div class="neox-field"><label for="neox-margin">Marge (<span id="neox-margin-value">4</span>)</label><input type="range" id="neox-margin" min="0" max="12" value="4"></div>
                 <div class="neox-field"><label for="neox-moduleScale">Échelle modules</label><input type="range" id="neox-moduleScale" min="0.6" max="1" step="0.01" value="0.92"></div>
                 <div class="neox-field">
+                    <label for="neox-testProfile">Profil de test</label>
+                    <select id="neox-testProfile">
+                        <option value="compact">Compact (96/128/256)</option>
+                        <option value="balanced" selected>Équilibré (128/256/512)</option>
+                        <option value="print">Impression (256/512/1024)</option>
+                    </select>
+                </div>
+                <div class="neox-field">
                     <label for="neox-errorCorrection">Correction d'erreur</label>
                     <select id="neox-errorCorrection">
                         <option value="L">L</option>
@@ -391,14 +433,16 @@
         <div class="neox-card neox-preview" id="neox-preview" aria-live="polite">
             <div id="neox-preview-content">{{ initialSvg|raw }}</div>
             <dl class="neox-meta" id="neox-meta"></dl>
+            <meter class="neox-readability-gauge" id="neox-readability-gauge" min="0" max="100" low="70" high="85" optimum="100" value="0"></meter>
+            <div class="neox-status" id="neox-status"></div>
             <div class="neox-preview__loader"><div class="neox-preview__spinner"></div></div>
         </div>
         <div class="neox-actions">
+            <button type="button" class="neox-btn" id="neox-optimize">Optimiser la lisibilité</button>
             <button type="button" class="neox-btn neox-btn--primary" id="neox-download-svg">Télécharger le SVG</button>
             <button type="button" class="neox-btn neox-btn--primary" id="neox-download-png">Télécharger le PNG</button>
             <button type="button" class="neox-btn" id="neox-copy-embed">Copier le composant Twig</button>
         </div>
-        <div class="neox-status" id="neox-status"></div>
     </section>
 </main>
 
@@ -421,11 +465,20 @@
     var timer = null;
     var requestId = 0;
 
+    el('neox-back').addEventListener('click', function () {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+
+        window.location.assign('/');
+    });
+
     var fields = [
         'content', 'moduleShape', 'finderShape', 'alignmentShape', 'frameShape', 'frameLabel', 'frameColor', 'frameDecorative', 'frameDecorativeOpacity',
         'foreground', 'background', 'finderColor', 'alignmentColor', 'gradientType', 'gradientTo',
-        'finderEffect', 'finderGradientTo', 'finderEyeShape', 'logoHref', 'finderIconHref',
-        'size', 'margin', 'moduleScale', 'errorCorrection',
+        'finderEffect', 'finderGradientTo', 'finderEyeShape', 'finderEyeScale', 'logoHref', 'finderIconHref',
+        'size', 'margin', 'moduleScale', 'testProfile', 'errorCorrection',
     ];
 
     // Capture default values of all fields so we can reset them before applying a preset
@@ -443,7 +496,7 @@
             size: Number(el('neox-size').value),
             margin: Number(el('neox-margin').value),
             moduleShape: el('neox-moduleShape').value,
-            finderShape: el('neox-finderShape').value,
+            finderFrameShape: el('neox-finderShape').value,
             foreground: el('neox-foreground').value,
             background: el('neox-background').value,
             finderColor: el('neox-finderColor').value,
@@ -457,12 +510,14 @@
             finderEffect: el('neox-finderEffect').value,
             finderGradientTo: el('neox-finderEffect').value === 'gradient' ? el('neox-finderGradientTo').value : null,
             finderEyeShape: el('neox-finderEyeShape').value || null,
+            finderEyeScale: Number(el('neox-finderEyeScale').value),
             frameShape: el('neox-frameShape').value,
             frameLabel: el('neox-frameLabel').value || null,
             frameColor: el('neox-frameColor').value,
             frameDecorative: el('neox-frameDecorative').checked,
             frameDecorativeOpacity: Number(el('neox-frameDecorativeOpacity').value),
             errorCorrection: el('neox-errorCorrection').value,
+            testProfile: el('neox-testProfile').value,
         };
     }
 
@@ -518,23 +573,69 @@
     }
 
     function checkValidation(currentRequest) {
-        if (selectedPreset) { setStatus(''); setLoading(false); return; }
-
         fetch(endpoints.validate, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             body: JSON.stringify(payload()),
         }).then(function (response) { return response.json(); }).then(function (data) {
             if (currentRequest !== requestId) return;
+            var score = 'Lisibilité estimée : ' + (data.readabilityScore || 0) + ' %';
+            var gauge = el('neox-readability-gauge');
+            gauge.value = data.readabilityScore || 0;
+            gauge.className = 'neox-readability-gauge' + (gauge.value < 70 ? ' is-error' : (gauge.value < 85 ? ' is-warning' : ''));
+            var criteria = data.readabilityDetails
+                ? 'marge ' + data.readabilityDetails.margin + ', modules ' + data.readabilityDetails.moduleScale + ', œil ×' + data.readabilityDetails.finderEyeScale + ', correction ' + data.readabilityDetails.errorCorrection
+                : '';
+            var message;
+            var kind;
             if (data.errors && data.errors.length) {
-                setStatus(data.errors.join(' '), 'error');
+                message = score + ' — ' + data.errors.join(' ');
+                kind = 'error';
             } else if (data.warnings && data.warnings.length) {
-                setStatus(data.warnings.join(' '), 'warning');
+                message = score + ' — ' + data.warnings.join(' ');
+                kind = 'warning';
             } else {
-                setStatus('Contraste OK (' + data.contrastRatio + ':1)', 'ok');
+                message = score + ' — contraste ' + data.contrastRatio + ':1';
+                kind = 'ok';
             }
+            return verifyAutomaticDecode().then(function (decode) {
+                if (currentRequest === requestId) setStatus(message + (criteria ? ' — ' + criteria : '') + ' — ' + decode, kind);
+            });
         }).catch(function () { setStatus(''); }).finally(function () {
             if (currentRequest === requestId) setLoading(false);
+        });
+    }
+
+    function verifyAutomaticDecode() {
+        if (!('BarcodeDetector' in window)) return Promise.resolve('Décodage automatique non disponible');
+        var svg = preview.querySelector('svg');
+        if (!svg) return Promise.resolve('Décodage automatique impossible');
+        var url = URL.createObjectURL(new Blob([svg.outerHTML], { type: 'image/svg+xml' }));
+        var image = new Image();
+
+        return new Promise(function (resolve, reject) {
+            image.onload = resolve;
+            image.onerror = reject;
+            image.src = url;
+        }).then(function () {
+            var detector = new BarcodeDetector({ formats: ['qr_code'] });
+            var profile = el('neox-testProfile').value;
+            var sizes = profile === 'compact' ? [96, 128, 256] : (profile === 'print' ? [256, 512, 1024] : [128, 256, 512]);
+            return Promise.all(sizes.map(function (size) {
+                var canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                canvas.getContext('2d').drawImage(image, 0, 0, size, size);
+                return detector.detect(canvas).then(function (results) {
+                    return results.some(function (result) { return !!result.rawValue; });
+                });
+            }));
+        }).then(function (results) {
+            return 'Décodage automatique : ' + results.filter(Boolean).length + '/3 résolutions';
+        }).catch(function () {
+            return 'Décodage automatique non disponible';
+        }).finally(function () {
+            URL.revokeObjectURL(url);
         });
     }
 
@@ -778,6 +879,28 @@
         a.click();
         URL.revokeObjectURL(url);
     }
+
+    el('neox-optimize').addEventListener('click', function () {
+        setActivePreset('');
+        el('neox-margin').value = '4';
+        el('neox-moduleScale').value = '0.92';
+        el('neox-finderEyeScale').value = '1';
+        el('neox-moduleShape').value = 'square';
+        el('neox-finderShape').value = 'square';
+        el('neox-finderEyeShape').value = 'square';
+        el('neox-alignmentShape').value = 'square';
+        el('neox-foreground').value = '#111111';
+        el('neox-background').value = '#ffffff';
+        el('neox-finderColor').value = '#111111';
+        el('neox-alignmentColor').value = '#111111';
+        el('neox-gradientType').value = 'none';
+        el('neox-finderEffect').value = 'none';
+        el('neox-logoHref').value = '';
+        el('neox-finderIconHref').value = '';
+        el('neox-frameShape').value = 'none';
+        el('neox-errorCorrection').value = 'H';
+        refresh();
+    });
 
     renderRemote();
 })();

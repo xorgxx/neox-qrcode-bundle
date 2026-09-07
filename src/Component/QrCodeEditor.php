@@ -18,10 +18,12 @@ final class QrCodeEditor
     public const DEFAULT_SIZE = 360;
     public const DEFAULT_MARGIN = 4;
     public const DEFAULT_MODULE_SCALE = 0.92;
+    public const DEFAULT_FINDER_EYE_SCALE = 1.0;
 
     public string $content = 'https://example.com';
     public string $endpoint = '/api/qrcode/svg';
     public string $downloadEndpoint = '/api/qrcode/png';
+    public string $validateEndpoint = '/api/qrcode/validate';
 
     public function __construct(private readonly QrPresetRegistry $presets)
     {
@@ -45,6 +47,7 @@ final class QrCodeEditor
             'size' => self::DEFAULT_SIZE,
             'margin' => self::DEFAULT_MARGIN,
             'moduleScale' => self::DEFAULT_MODULE_SCALE,
+            'finderEyeScale' => self::DEFAULT_FINDER_EYE_SCALE,
         ];
     }
 }

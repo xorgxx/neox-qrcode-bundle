@@ -3,6 +3,7 @@
     data-controller="neox-qrcode"
     data-neox-qrcode-endpoint-value="{{ endpoint }}"
     data-neox-qrcode-download-endpoint-value="{{ downloadEndpoint }}"
+    data-neox-qrcode-validate-endpoint-value="{{ validateEndpoint }}"
 >
     <div class="neox-qrcode-editor__controls">
         <label>Contenu
@@ -24,21 +25,17 @@
                 <option value="diamond">Diamond</option>
                 <option value="heart">Heart</option>
                 <option value="liquid">Liquid</option>
+                <option value="blob">Blob avec ponts</option>
+                <option value="wave">Vague avec ponts</option>
+                <option value="cross">Croix avec ponts</option>
             </select>
         </label>
 
-        <label>Repères
+        <label>Cadre des repères
             <select data-neox-qrcode-target="finderShape" data-action="change->neox-qrcode#refresh">
                 <option value="square">Square</option>
                 <option value="rounded">Rounded</option>
                 <option value="circle">Circle</option>
-                <option value="diamond">Diamond</option>
-                <option value="leaf">Leaf</option>
-                <option value="hexagon">Hexagon</option>
-                <option value="star">Star</option>
-                <option value="dotted">Dotted</option>
-                <option value="minimal">Minimal</option>
-                <option value="inverted">Inverted</option>
             </select>
         </label>
 
@@ -62,6 +59,22 @@
                 <option value="leaf">Feuille</option>
                 <option value="hexagon">Hexagone</option>
                 <option value="star">Étoile</option>
+                <option value="octagon">Octogone</option>
+                <option value="shield">Bouclier</option>
+                <option value="heart">Cœur</option>
+                <option value="flower">Fleur à 4 pétales</option>
+            </select>
+        </label>
+
+        <label>Taille de l'œil
+            <input type="range" min="0.85" max="1.08" step="0.01" value="{{ this.defaults.finderEyeScale }}" data-neox-qrcode-target="finderEyeScale" data-action="input->neox-qrcode#refresh">
+        </label>
+
+        <label>Profil de test
+            <select data-neox-qrcode-target="testProfile" data-action="change->neox-qrcode#refresh">
+                <option value="compact">Compact (96/128/256)</option>
+                <option value="balanced" selected>Équilibré (128/256/512)</option>
+                <option value="print">Impression (256/512/1024)</option>
             </select>
         </label>
 
@@ -110,11 +123,13 @@
         <label>Label cadre <input type="text" placeholder="Scan me" data-neox-qrcode-target="frameLabel" data-action="change->neox-qrcode#refresh"></label>
 
         <div class="neox-qrcode-editor__actions">
+            <button type="button" data-action="neox-qrcode#optimizeReadability">Optimiser la lisibilité</button>
             <button type="button" data-action="neox-qrcode#downloadSvg">SVG</button>
             <button type="button" data-action="neox-qrcode#downloadPng">PNG</button>
         </div>
     </div>
 
     <div class="neox-qrcode-editor__preview" data-neox-qrcode-target="preview" aria-live="polite"></div>
+    <meter min="0" max="100" low="70" high="85" optimum="100" value="0" data-neox-qrcode-target="readabilityGauge"></meter>
     <div class="neox-qrcode-editor__status" data-neox-qrcode-target="status"></div>
 </div>

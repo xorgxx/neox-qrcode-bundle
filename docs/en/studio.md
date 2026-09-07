@@ -14,7 +14,9 @@ neox_qrcode:
 - Live preview updated on every change, rendered by the same `/api/qrcode/svg` endpoint used by the Stimulus editor (no duplicated QR/SVG logic, see `docs/architecture.md`).
 - A visual gallery of all built-in presets (`QrPresetRegistry`), each rendered server-side as a real thumbnail.
 - Full controls for module/finder/alignment shapes, colors, gradients, finder effects, finder icon overlay, logo, frame shape/label, size, margin, module scale and error correction.
-- Live contrast/reliability feedback via `/api/qrcode/validate` (errors, warnings, or contrast ratio).
+- Live estimated readability percentage via `/api/qrcode/validate`, with errors, warnings, and contrast ratio. This score is indicative and does not replace scans on real devices.
+- Automatic decoding at 128, 256, and 512 px when the browser provides `BarcodeDetector`. A missing API is reported as unavailable, not as a QR failure.
+- The “Optimize readability” button preserves content while restoring canonical shapes, high contrast, margin 4, error correction H, no logo/frame, and safe scales.
 - SVG/PNG export buttons, and a "copy Twig component" action that generates a ready-to-paste `<twig:NeoxQrCode ... />` snippet matching the current settings.
 - A "random content" button to quickly preview different payloads (URL, email, Wi-Fi, phone).
 

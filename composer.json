@@ -8,7 +8,7 @@
     "bacon/bacon-qr-code": "^3.1",
     "symfony/framework-bundle": "^7.4 || ^8.0",
     "symfony/twig-bundle": "^7.4 || ^8.0",
-    "symfony/ux-twig-component": "^2.28",
+    "symfony/ux-twig-component": "^2.28 || ^3.0",
     "symfony/cache-contracts": "^3.5",
     "twig/twig": "^3.15"
   },

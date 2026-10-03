@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Xorgxx\NeoxQrCodeBundle\Security;
 
 use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
 final class CacheSingleUseTokenStore implements SingleUseTokenStoreInterface
@@ -13,7 +14,8 @@ final class CacheSingleUseTokenStore implements SingleUseTokenStoreInterface
     private const TTL = 31536000;
 
     public function __construct(
-        private readonly AdapterInterface $cache,
+        // PSR-6 (hasItem) + contracts (get callback): both are required.
+        private readonly AdapterInterface&CacheInterface $cache,
     ) {
     }
 

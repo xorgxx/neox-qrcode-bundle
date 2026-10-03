@@ -231,5 +231,4 @@ final class QrCodeApiController extends AbstractController
             ReadabilityProfile::from((string) ($data['testProfile'] ?? 'balanced')),
         ];
     }
-
 }

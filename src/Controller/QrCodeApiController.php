@@ -8,17 +8,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Xorgxx\NeoxQrCodeBundle\Decoder\QrDecoderInterface;
-use Xorgxx\NeoxQrCodeBundle\Enum\AlignmentShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\ErrorCorrection;
-use Xorgxx\NeoxQrCodeBundle\Enum\FinderEffect;
-use Xorgxx\NeoxQrCodeBundle\Enum\FinderEyeShape;
-use Xorgxx\NeoxQrCodeBundle\Enum\FinderFrameShape;
-use Xorgxx\NeoxQrCodeBundle\Enum\FinderShape;
-use Xorgxx\NeoxQrCodeBundle\Enum\FrameShape;
-use Xorgxx\NeoxQrCodeBundle\Enum\GradientType;
-use Xorgxx\NeoxQrCodeBundle\Enum\ModuleShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\ReadabilityProfile;
 use Xorgxx\NeoxQrCodeBundle\Model\QrFrameStyle;
 use Xorgxx\NeoxQrCodeBundle\Model\QrStyle;
@@ -37,12 +30,17 @@ final class QrCodeApiController extends AbstractController
         private readonly QrPresetRegistry $presets,
         private readonly PngRenderer $pngRenderer,
         private readonly QrDecoderInterface $decoder,
+        private readonly ?RateLimiterFactory $apiRateLimiter = null,
     ) {
     }
 
     #[Route('/svg', name: 'svg', methods: ['POST'])]
     public function svg(Request $request): Response
     {
+        if (!$this->isAcceptedByRateLimiter($request)) {
+            return $this->tooManyRequests();
+        }
+
         try {
             [$content, $style, $ec, $preset, $frame] = $this->payload($request);
             $result = null !== $preset
@@ -62,6 +60,10 @@ final class QrCodeApiController extends AbstractController
     #[Route('/png', name: 'png', methods: ['POST'])]
     public function png(Request $request): Response
     {
+        if (!$this->isAcceptedByRateLimiter($request)) {
+            return $this->tooManyRequests();
+        }
+
         try {
             [$content, $style, $ec, $preset, $frame] = $this->payload($request);
             $result = null !== $preset
@@ -81,6 +83,10 @@ final class QrCodeApiController extends AbstractController
     #[Route('/matrix', name: 'matrix', methods: ['POST'])]
     public function matrix(Request $request): JsonResponse
     {
+        if (!$this->isAcceptedByRateLimiter($request)) {
+            return $this->tooManyRequests();
+        }
+
         try {
             [$content, $style, $ec, $preset, $frame] = $this->payload($request);
             $result = null !== $preset
@@ -100,6 +106,10 @@ final class QrCodeApiController extends AbstractController
     #[Route('/validate', name: 'validate', methods: ['POST'])]
     public function validate(Request $request): JsonResponse
     {
+        if (!$this->isAcceptedByRateLimiter($request)) {
+            return $this->tooManyRequests();
+        }
+
         try {
             [$content, $style, $ec, $preset, $frame, $profile] = $this->payload($request);
             if (null !== $preset) {
@@ -118,7 +128,7 @@ final class QrCodeApiController extends AbstractController
 
             return $this->json([
                 'valid' => $report->valid,
-                'contrastRatio' => round($report->contrastRatio, 2),
+                'contrastRatio' => null !== $report->contrastRatio ? round($report->contrastRatio, 2) : null,
                 'readabilityScore' => $report->readabilityScore,
                 'readabilityDetails' => $report->readabilityDetails,
                 'estimated' => true,
@@ -153,6 +163,10 @@ final class QrCodeApiController extends AbstractController
     #[Route('/user-presets', name: 'user_presets_save', methods: ['POST'])]
     public function userPresetsSave(Request $request, UserPresetStore $store): JsonResponse
     {
+        if (!$this->isAcceptedByRateLimiter($request)) {
+            return $this->tooManyRequests();
+        }
+
         $data = $request->toArray();
         $name = (string) ($data['name'] ?? '');
         $config = $data['config'] ?? [];
@@ -166,11 +180,37 @@ final class QrCodeApiController extends AbstractController
     }
 
     #[Route('/user-presets/{name}', name: 'user_presets_delete', methods: ['DELETE'])]
-    public function userPresetsDelete(string $name, UserPresetStore $store): JsonResponse
+    public function userPresetsDelete(string $name, UserPresetStore $store, Request $request): JsonResponse
     {
+        if (!$this->isAcceptedByRateLimiter($request)) {
+            return $this->tooManyRequests();
+        }
+
         $store->delete($name);
 
         return $this->json(['ok' => true]);
+    }
+
+    /**
+     * The limiter is nullable so the bundle works without symfony/rate-limiter
+     * or when `xorgxx_neox_qrcode_api` is not configured; importing
+     * `config/rate_limiter.yaml` activates it transparently.
+     */
+    private function isAcceptedByRateLimiter(Request $request): bool
+    {
+        if (null === $this->apiRateLimiter) {
+            return true;
+        }
+
+        return $this->apiRateLimiter
+            ->create($request->getClientIp() ?? 'unknown')
+            ->consume(1)
+            ->isAccepted();
+    }
+
+    private function tooManyRequests(): JsonResponse
+    {
+        return new JsonResponse(['error' => 'Too many requests.'], Response::HTTP_TOO_MANY_REQUESTS);
     }
 
     /** @return array{string,QrStyle,ErrorCorrection,?string,?QrFrameStyle,ReadabilityProfile} */
@@ -179,50 +219,8 @@ final class QrCodeApiController extends AbstractController
         $data = $request->toArray();
         $content = trim((string) ($data['content'] ?? ''));
         $preset = isset($data['preset']) && '' !== $data['preset'] ? (string) $data['preset'] : null;
-
-        $style = new QrStyle(
-            size: (int) ($data['size'] ?? 320),
-            margin: (int) ($data['margin'] ?? 4),
-            moduleShape: ModuleShape::from((string) ($data['moduleShape'] ?? 'square')),
-            finderShape: FinderShape::from((string) ($data['finderShape'] ?? 'square')),
-            foreground: (string) ($data['foreground'] ?? '#111111'),
-            background: (string) ($data['background'] ?? '#ffffff'),
-            finderColor: isset($data['finderColor']) ? (string) $data['finderColor'] : null,
-            moduleScale: (float) ($data['moduleScale'] ?? 0.92),
-            gradientType: GradientType::from((string) ($data['gradientType'] ?? 'none')),
-            gradientTo: isset($data['gradientTo']) ? (string) $data['gradientTo'] : null,
-            logoHref: isset($data['logoHref']) ? (string) $data['logoHref'] : null,
-            logoScale: (float) ($data['logoScale'] ?? 0.20),
-            logoBackground: (bool) ($data['logoBackground'] ?? true),
-            alignmentShape: AlignmentShape::from((string) ($data['alignmentShape'] ?? 'square')),
-            alignmentColor: isset($data['alignmentColor']) ? (string) $data['alignmentColor'] : null,
-            finderIconHref: isset($data['finderIconHref']) ? (string) $data['finderIconHref'] : null,
-            finderIconScale: (float) ($data['finderIconScale'] ?? 0.6),
-            finderEffect: FinderEffect::from((string) ($data['finderEffect'] ?? 'none')),
-            finderGradientTo: isset($data['finderGradientTo']) ? (string) $data['finderGradientTo'] : null,
-            finderCenterShape: isset($data['finderCenterShape']) && '' !== $data['finderCenterShape']
-                ? ModuleShape::from((string) $data['finderCenterShape'])
-                : null,
-            finderEyeShape: isset($data['finderEyeShape']) && '' !== $data['finderEyeShape']
-                ? FinderEyeShape::from((string) $data['finderEyeShape'])
-                : null,
-            finderFrameShape: isset($data['finderFrameShape']) && '' !== $data['finderFrameShape']
-                ? FinderFrameShape::from((string) $data['finderFrameShape'])
-                : null,
-            finderEyeScale: (float) ($data['finderEyeScale'] ?? 1.0),
-        );
-
-        $frameShape = FrameShape::from((string) ($data['frameShape'] ?? 'none'));
-        $frame = FrameShape::None !== $frameShape || isset($data['frameLabel'])
-            ? new QrFrameStyle(
-                shape: $frameShape,
-                label: isset($data['frameLabel']) && '' !== $data['frameLabel'] ? (string) $data['frameLabel'] : null,
-                labelColor: isset($data['frameLabelColor']) ? (string) $data['frameLabelColor'] : null,
-                frameColor: isset($data['frameColor']) ? (string) $data['frameColor'] : null,
-                decorative: (bool) ($data['frameDecorative'] ?? true),
-                decorativeOpacity: isset($data['frameDecorativeOpacity']) ? (float) $data['frameDecorativeOpacity'] : 0.6,
-            )
-            : null;
+        $style = QrStyle::fromArray($data);
+        $frame = QrFrameStyle::fromArray($data);
 
         return [
             $content,
@@ -233,4 +231,5 @@ final class QrCodeApiController extends AbstractController
             ReadabilityProfile::from((string) ($data['testProfile'] ?? 'balanced')),
         ];
     }
+
 }

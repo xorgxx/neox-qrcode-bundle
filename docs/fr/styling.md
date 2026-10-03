@@ -69,6 +69,8 @@ Un `alignmentColor` séparé peut être défini. Si omis, il utilise `finderColo
 
 Les dégradés sont générés dans `<defs>` et utilisés comme remplissage des modules.
 
+`background` accepte aussi `transparent` (ou l'option `transparent` du composant/de l'API) : aucun rect de fond n'est émis et les découpes claires des repères deviennent de vrais trous, donc le QR hérite de la surface sur laquelle il est affiché. Le validateur ne peut pas calculer de ratio de contraste dans ce cas et émet un avertissement.
+
 ## Formes de cadre
 
 Un `QrFrameStyle` peut envelopper le QR code dans une forme extérieure décorative via `FrameRenderer`.
@@ -79,6 +81,7 @@ Un `QrFrameStyle` peut envelopper le QR code dans une forme extérieure décorat
 - `heart` -> rogne le QR en cœur
 - `star` -> rogne le QR en étoile
 - `hexagon` -> rogne le QR en hexagone
+- `security` -> badge arrondi avec bandeau d'en-tête ; le texte vient de `QrFrameStyle::$header` (défaut `CODE SÉCURITÉ`) ou de l'option `frameHeader` du composant/de l'API
 
 Un `label` optionnel est rendu sous la forme. Rogner un QR dans une forme non carrée peut couper des modules près des bords : validez toujours la scannabilité avec de vrais appareils avant utilisation en production, et préférez la correction d'erreur `H` avec une `margin` généreuse.
 

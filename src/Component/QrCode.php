@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Component;
 
+use Symfony\Component\Routing\Exception\ExceptionInterface as RoutingException;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 use Xorgxx\NeoxQrCodeBundle\Enum\AlignmentShape;
 use Xorgxx\NeoxQrCodeBundle\Enum\ErrorCorrection;
@@ -51,26 +53,67 @@ final class QrCode
     public ?string $frameLabel = null;
     public ?string $frameLabelColor = null;
     public ?string $frameColor = null;
+    public ?string $frameHeader = null;
     public bool $frameDecorative = true;
     public float $frameDecorativeOpacity = 0.6;
     public ?string $preset = null;
     public bool $interactive = false;
     public bool $presetSelector = false;
+    public bool $bare = false;
+    public bool $transparent = false;
 
     public function __construct(
         private readonly QrCodeGenerator $generator,
         private readonly QrPresetRegistry $presetRegistry,
         private readonly UserPresetStore $userPresetStore,
+        private readonly UrlGeneratorInterface $urlGenerator,
     ) {
+    }
+
+    /**
+     * Route-dependent URLs are resolved lazily and return null when the app
+     * did not import the bundle routes, so <twig:NeoxQrCode> still renders
+     * a static SVG instead of crashing the page.
+     */
+    public function getSvgEndpoint(): ?string
+    {
+        return $this->routeUrl('xorgxx_neox_qrcode_api_svg');
+    }
+
+    public function getStudioUrl(): ?string
+    {
+        return $this->routeUrl('xorgxx_neox_qrcode_studio');
+    }
+
+    private function routeUrl(string $route): ?string
+    {
+        try {
+            return $this->urlGenerator->generate($route);
+        } catch (RoutingException) {
+            return null;
+        }
     }
 
     public function getSvg(): string
     {
         if (null !== $this->preset) {
-            return $this->generator->generatePreset(
+            try {
+                return $this->generator->generatePreset(
+                    $this->content,
+                    $this->preset,
+                    ErrorCorrection::from($this->errorCorrection),
+                )->svg;
+            } catch (\InvalidArgumentException) {
+                // Not a built-in preset: it may be a user-saved one.
+            }
+
+            $config = $this->userPresetStore->getConfig($this->preset);
+
+            return $this->generator->generate(
                 $this->content,
-                $this->preset,
-                ErrorCorrection::from($this->errorCorrection),
+                QrStyle::fromArray($config),
+                ErrorCorrection::from((string) ($config['errorCorrection'] ?? $this->errorCorrection)),
+                QrFrameStyle::fromArray($config),
             )->svg;
         }
 
@@ -80,7 +123,7 @@ final class QrCode
             moduleShape: ModuleShape::from($this->moduleShape),
             finderShape: FinderShape::from($this->finderShape),
             foreground: $this->foreground,
-            background: $this->background,
+            background: $this->transparent ? 'transparent' : $this->background,
             finderColor: $this->finderColor,
             moduleScale: $this->moduleScale,
             gradientType: GradientType::from($this->gradientType),
@@ -101,7 +144,7 @@ final class QrCode
 
         $frameShape = FrameShape::from($this->frameShape);
         $frame = FrameShape::None !== $frameShape || null !== $this->frameLabel
-            ? new QrFrameStyle($frameShape, $this->frameLabel, $this->frameLabelColor, $this->frameColor, $this->frameDecorative, $this->frameDecorativeOpacity)
+            ? new QrFrameStyle($frameShape, $this->frameLabel, $this->frameLabelColor, $this->frameColor, $this->frameHeader, $this->frameDecorative, $this->frameDecorativeOpacity)
             : null;
 
         return $this->generator->generate(

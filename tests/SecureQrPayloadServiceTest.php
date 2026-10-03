@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Xorgxx\NeoxQrCodeBundle\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Xorgxx\NeoxQrCodeBundle\Security\CacheSingleUseTokenStore;
 use Xorgxx\NeoxQrCodeBundle\Security\SecureQrPayloadService;
 use Xorgxx\NeoxQrCodeBundle\Security\SingleUseTokenStoreInterface;
@@ -248,13 +247,40 @@ final class SecureQrPayloadServiceTest extends TestCase
 
     public function testCacheSingleUseTokenStoreConsumesAtomically(): void
     {
-        $cache = new InMemoryCache();
-        $store = new CacheSingleUseTokenStore($cache);
+        $store = new CacheSingleUseTokenStore(new ArrayAdapter());
 
         self::assertTrue($store->consume('jti-1'));
         self::assertFalse($store->consume('jti-1'));
         self::assertTrue($store->isConsumed('jti-1'));
         self::assertFalse($store->isConsumed('jti-2'));
+    }
+
+    public function testIsConsumedDoesNotMarkToken(): void
+    {
+        $store = new CacheSingleUseTokenStore(new ArrayAdapter());
+
+        self::assertFalse($store->isConsumed('jti-probe'));
+        // Probing must not create an entry, otherwise consume() would fail.
+        self::assertTrue($store->consume('jti-probe'));
+        self::assertTrue($store->isConsumed('jti-probe'));
+    }
+
+    public function testSingleUseTokenStillConsumableAfterVerifyWithoutConsume(): void
+    {
+        $store = new CacheSingleUseTokenStore(new ArrayAdapter());
+        $service = $this->createService($store);
+
+        $token = $service->sign(
+            ['ticket' => 1],
+            new \DateTimeImmutable('+15 minutes'),
+            singleUse: true,
+        );
+
+        // Read-only verification probes the store; the token must remain usable.
+        $service->verify($token, consume: false);
+
+        $payload = $service->verify($token, consume: true);
+        self::assertSame(['ticket' => 1], $payload->data);
     }
 
     private function createService(?SingleUseTokenStoreInterface $store = null, string $secret = self::SECRET): SecureQrPayloadService
@@ -282,85 +308,5 @@ final class InMemoryTokenStore implements SingleUseTokenStoreInterface
     public function isConsumed(string $jti): bool
     {
         return isset($this->consumed[$jti]);
-    }
-}
-
-final class InMemoryCache implements CacheInterface
-{
-    /** @var array<string, mixed> */
-    private array $data = [];
-
-    /** @param array<string, mixed>|null $metadata */
-    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed
-    {
-        if (array_key_exists($key, $this->data)) {
-            return $this->data[$key];
-        }
-
-        $save = true;
-        $value = $callback($this->createItem($key), $save);
-        $this->data[$key] = $value;
-
-        return $value;
-    }
-
-    public function delete(string $key): bool
-    {
-        unset($this->data[$key]);
-
-        return true;
-    }
-
-    private function createItem(string $key): ItemInterface
-    {
-        return new InMemoryCacheItem($key);
-    }
-}
-
-final class InMemoryCacheItem implements ItemInterface
-{
-    public function __construct(private string $key)
-    {
-    }
-
-    public function getKey(): string
-    {
-        return $this->key;
-    }
-
-    public function get(): mixed
-    {
-        return null;
-    }
-
-    public function isHit(): bool
-    {
-        return false;
-    }
-
-    public function set(mixed $value): static
-    {
-        return $this;
-    }
-
-    public function expiresAt(?\DateTimeInterface $expiration): static
-    {
-        return $this;
-    }
-
-    public function expiresAfter(\DateInterval|int|null $time): static
-    {
-        return $this;
-    }
-
-    public function tag(string|iterable $tags): static
-    {
-        return $this;
-    }
-
-    /** @return array<string, mixed> */
-    public function getMetadata(): array
-    {
-        return [];
     }
 }

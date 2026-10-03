@@ -1,3 +1,6 @@
+{% if bare %}
+{{ this.svg|raw }}
+{% else %}
 {% set uid = 'neox-qr-' ~ random() %}
 <style>
 .neox-qrcode{display:flex;flex-direction:column;align-items:center;gap:.6rem;font-family:system-ui,-apple-system,sans-serif;--nx-p:#6366f1;--nx-bg:#fff;--nx-t:#1e293b;--nx-m:#64748b;--nx-bd:#e2e8f0;--nx-tr:#f1f5f9;}
@@ -26,7 +29,7 @@
 .neox-qrcode__sheet-item-dot{width:28px;height:28px;border-radius:50%;background:currentColor;opacity:.15;flex-shrink:0;}
 .neox-qrcode__sheet-item.is-active .neox-qrcode__sheet-item-dot{opacity:.4;background:#fff;}
 </style>
-<div class="neox-qrcode" id="{{ uid }}" data-content="{{ content|e('html_attr') }}" data-endpoint="{{ path('xorgxx_neox_qrcode_api_svg')|e('html_attr') }}">
+<div class="neox-qrcode" id="{{ uid }}" data-content="{{ content|e('html_attr') }}"{% if this.svgEndpoint %} data-endpoint="{{ this.svgEndpoint|e('html_attr') }}"{% endif %}>
     <div class="neox-qrcode__svg" id="{{ uid }}-svg">{{ this.svg|raw }}</div>
 
     <div class="neox-qrcode__actions">
@@ -54,7 +57,9 @@
         ">⬇ PNG</button>
     </div>
 
-    <a href="{{ path('xorgxx_neox_qrcode_studio') }}" class="neox-qrcode__action-btn" style="text-decoration:none;display:inline-flex;align-items:center;">⚙ Studio</a>
+    {% if this.studioUrl %}
+    <a href="{{ this.studioUrl }}" class="neox-qrcode__action-btn" style="text-decoration:none;display:inline-flex;align-items:center;">⚙ Studio</a>
+    {% endif %}
 
     {% if presetSelector %}
     <button type="button" class="neox-qrcode__preset-trigger" id="{{ uid }}-trigger" onclick="var o=document.getElementById('{{ uid }}-overlay'),sh=document.getElementById('{{ uid }}-sheet');o.classList.add('is-open');sh.classList.add('is-open');">
@@ -69,7 +74,7 @@
                 <button type="button"
                     class="neox-qrcode__sheet-item{{ preset == name ? ' is-active' : '' }}"
                     data-neox-preset="{{ name|e('html_attr') }}"
-                    onclick="var r=document.getElementById('{{ uid }}'),s=document.getElementById('{{ uid }}-svg'),o=document.getElementById('{{ uid }}-overlay'),sh=document.getElementById('{{ uid }}-sheet');sh.classList.remove('is-open');o.classList.remove('is-open');s.classList.add('is-loading');this.parentNode.querySelectorAll('.neox-qrcode__sheet-item').forEach(function(e){e.classList.remove('is-active')});this.classList.add('is-active');fetch(r.dataset.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'image/svg+xml'},body:JSON.stringify({content:r.dataset.content,preset:this.dataset.neoxPreset,errorCorrection:'H'})}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(v){s.innerHTML=v}).catch(function(e){console.error(e)}).finally(function(){s.classList.remove('is-loading')});"
+                    onclick="var r=document.getElementById('{{ uid }}'),s=document.getElementById('{{ uid }}-svg'),o=document.getElementById('{{ uid }}-overlay'),sh=document.getElementById('{{ uid }}-sheet');sh.classList.remove('is-open');o.classList.remove('is-open');if(!r.dataset.endpoint)return;s.classList.add('is-loading');this.parentNode.querySelectorAll('.neox-qrcode__sheet-item').forEach(function(e){e.classList.remove('is-active')});this.classList.add('is-active');fetch(r.dataset.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'image/svg+xml'},body:JSON.stringify({content:r.dataset.content,preset:this.dataset.neoxPreset,errorCorrection:'H'})}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(v){s.innerHTML=v}).catch(function(e){console.error(e)}).finally(function(){s.classList.remove('is-loading')});"
                 ><span class="neox-qrcode__sheet-item-dot"></span>{{ name }}</button>
             {% endfor %}
             {% for name, entry in this.userPresets %}
@@ -77,10 +82,11 @@
                     class="neox-qrcode__sheet-item neox-qrcode__sheet-item--user{{ preset == name ? ' is-active' : '' }}"
                     data-neox-preset="{{ name|e('html_attr') }}"
                     data-neox-config="{{ entry.config|json_encode|e('html_attr') }}"
-                    onclick="var r=document.getElementById('{{ uid }}'),s=document.getElementById('{{ uid }}-svg'),o=document.getElementById('{{ uid }}-overlay'),sh=document.getElementById('{{ uid }}-sheet');sh.classList.remove('is-open');o.classList.remove('is-open');s.classList.add('is-loading');this.parentNode.querySelectorAll('.neox-qrcode__sheet-item').forEach(function(e){e.classList.remove('is-active')});this.classList.add('is-active');var c=JSON.parse(this.dataset.neoxConfig||'{}');c.content=r.dataset.content;c.preset=null;c.errorCorrection='H';fetch(r.dataset.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'image/svg+xml'},body:JSON.stringify(c)}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(v){s.innerHTML=v}).catch(function(e){console.error(e)}).finally(function(){s.classList.remove('is-loading')});"
+                    onclick="var r=document.getElementById('{{ uid }}'),s=document.getElementById('{{ uid }}-svg'),o=document.getElementById('{{ uid }}-overlay'),sh=document.getElementById('{{ uid }}-sheet');sh.classList.remove('is-open');o.classList.remove('is-open');if(!r.dataset.endpoint)return;s.classList.add('is-loading');this.parentNode.querySelectorAll('.neox-qrcode__sheet-item').forEach(function(e){e.classList.remove('is-active')});this.classList.add('is-active');var c=JSON.parse(this.dataset.neoxConfig||'{}');c.content=r.dataset.content;c.preset=null;c.errorCorrection='H';fetch(r.dataset.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'image/svg+xml'},body:JSON.stringify(c)}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(v){s.innerHTML=v}).catch(function(e){console.error(e)}).finally(function(){s.classList.remove('is-loading')});"
                 ><span class="neox-qrcode__sheet-item-dot"></span>{{ name }} ★</button>
             {% endfor %}
         </div>
     </div>
     {% endif %}
 </div>
+{% endif %}

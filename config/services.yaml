@@ -27,3 +27,11 @@ services:
     Xorgxx\NeoxQrCodeBundle\Service\UserPresetStore:
         arguments:
             $storageDir: '%kernel.project_dir%/var/neox_qrcode'
+
+    # The limiter only exists when symfony/rate-limiter is installed AND the
+    # app configured `framework.rate_limiter.xorgxx_neox_qrcode_api` (e.g. by
+    # importing config/rate_limiter.yaml). `@?` keeps the argument null
+    # otherwise so the API stays usable without limiting.
+    Xorgxx\NeoxQrCodeBundle\Controller\QrCodeApiController:
+        arguments:
+            $apiRateLimiter: '@?limiter.xorgxx_neox_qrcode_api'

@@ -70,6 +70,14 @@ final class QrCodeGeneratorTest extends TestCase
         self::assertStringContainsString('<circle', $result->svg);
     }
 
+    public function testTransparentBackgroundOmitsBackgroundRect(): void
+    {
+        $result = $this->generator->generate('test', new QrStyle(background: 'transparent'));
+
+        self::assertStringStartsWith('<svg', $result->svg);
+        self::assertStringNotContainsString('<rect width="100%" height="100%"', $result->svg);
+    }
+
     public function testGenerateWithGradient(): void
     {
         $style = new QrStyle(

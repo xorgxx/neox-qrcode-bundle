@@ -9,6 +9,8 @@ neox_qrcode:
     resource: '@NeoxQrCodeBundle/config/routes.yaml'
 ```
 
+**Attention :** le Studio est un outil de design/développement. Importer les routes l'expose publiquement — restreignez l'accès avec une règle de firewall/`access_control` (ou n'importez pas les routes) en production.
+
 ## Ce qu'elle fait
 
 - Aperçu en direct mis à jour à chaque changement, rendu par le même endpoint `/api/qrcode/svg` que l'éditeur Stimulus (pas de logique QR/SVG dupliquée, voir `docs/architecture.md`).

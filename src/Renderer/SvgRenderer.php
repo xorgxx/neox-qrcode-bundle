@@ -40,15 +40,14 @@ final class SvgRenderer
         $n = $matrix->size();
         $view = $n + 2 * $style->margin;
         $fg = $this->escape($style->foreground);
-        $bg = $this->escape($style->background);
+        // 'transparent' is a valid CSS fill: cutouts punch real holes and no
+        // background rect is emitted, keeping the SVG transparent end to end.
+        $bg = 'transparent' === $style->background ? 'transparent' : $this->escape($style->background);
         $finderColor = $this->escape($style->finderColor ?? $style->foreground);
         $alignmentColor = $this->escape($style->alignmentColor ?? $style->finderColor ?? $style->foreground);
         $modulePaint = $fg;
         $finderPaint = $finderColor;
         $alignmentPositions = $this->alignmentPatternCenters($n);
-        // Finder frames are always rendered as a canonical unified ring.
-        // Legacy decorative finderShape values are mapped to a safe frame and decorative eye.
-        $skipFinderModules = true;
 
         $uid = bin2hex(random_bytes(4));
         $gradientId = 'neoxQrGradient_'.$uid;
@@ -74,12 +73,14 @@ final class SvgRenderer
         }
         $svg .= '</defs>';
 
-        $svg .= sprintf('<rect width="100%%" height="100%%" fill="%s"/>', $bg);
+        if ('transparent' !== $style->background) {
+            $svg .= sprintf('<rect width="100%%" height="100%%" fill="%s"/>', $bg);
+        }
         $svg .= $this->renderFinderShadow($n, $style);
         $svg .= '<g shape-rendering="geometricPrecision">';
 
         if (ModuleShape::Liquid === $style->moduleShape) {
-            $svg .= $this->renderLiquidModules($matrix, $n, $style, $modulePaint, $alignmentColor, $alignmentPositions, $skipFinderModules, $finderPaint, $liquidFilterId);
+            $svg .= $this->renderLiquidModules($matrix, $n, $style, $modulePaint, $alignmentPositions, $liquidFilterId);
         } elseif (in_array($style->moduleShape, [ModuleShape::Blob, ModuleShape::Wave, ModuleShape::Cross], true)) {
             $svg .= $this->renderConnectedModules($matrix, $n, $style, $modulePaint, $alignmentPositions);
         } else {
@@ -165,6 +166,9 @@ final class SvgRenderer
      * modules — horizontally, vertically, and diagonally — fuse into a
      * single continuous blob with smooth rounded boundaries.
      *
+     * Finder and alignment patterns are skipped here and redrawn afterwards
+     * by dedicated crisp renderers.
+     *
      * @param array<int, array{int,int}> $alignmentPositions
      */
     private function renderLiquidModules(
@@ -172,14 +176,10 @@ final class SvgRenderer
         int $n,
         QrStyle $style,
         string $modulePaint,
-        string $alignmentColor,
         array $alignmentPositions,
-        bool $skipFinderModules,
-        string $finderPaint,
         string $liquidFilterId,
     ): string {
         $dataSvg = '';
-        $otherSvg = '';
 
         for ($y = 0; $y < $n; ++$y) {
             for ($x = 0; $x < $n; ++$x) {
@@ -191,9 +191,6 @@ final class SvgRenderer
                 $py = $y + $style->margin;
 
                 if ($this->isFinderArea($x, $y, $n)) {
-                    if (!$skipFinderModules) {
-                        $otherSvg .= $this->renderFinderCell($px, $py, $style->finderShape, $finderPaint, $style->moduleScale);
-                    }
                     continue;
                 }
 
@@ -205,7 +202,7 @@ final class SvgRenderer
             }
         }
 
-        return '<g filter="url(#'.$liquidFilterId.')">'.$dataSvg.'</g>'.$otherSvg;
+        return '<g filter="url(#'.$liquidFilterId.')">'.$dataSvg.'</g>';
     }
 
     /**
@@ -316,17 +313,6 @@ final class SvgRenderer
             && $matrix->isDark($x, $y)
             && !$this->isFinderArea($x, $y, $n)
             && !$this->isAlignmentArea($x, $y, $alignmentPositions);
-    }
-
-    private function renderFinderCell(float $x, float $y, FinderShape $shape, string $color, float $scale): string
-    {
-        $s = match ($shape) {
-            FinderShape::Leaf, FinderShape::Star => 1.0,
-            FinderShape::Dotted => min($scale, .55),
-            default => max($scale, .96),
-        };
-
-        return $this->shapes->renderFinder($shape, $x, $y, $s, $color);
     }
 
     /** @return array<int, array{int,int}> */

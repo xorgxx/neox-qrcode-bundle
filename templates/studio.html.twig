@@ -369,6 +369,10 @@
                     <label for="neox-frameLabel">Label du cadre</label>
                     <input type="text" id="neox-frameLabel" placeholder="Scan me">
                 </div>
+                <div class="neox-field">
+                    <label for="neox-frameHeader">En-tête (cadre sécurité)</label>
+                    <input type="text" id="neox-frameHeader" placeholder="CODE SÉCURITÉ">
+                </div>
                 <div class="neox-field"><label><input type="checkbox" id="neox-frameDecorative" checked> Décor de fond</label></div>
                 <div class="neox-field"><label for="neox-frameDecorativeOpacity">Opacité décor <span id="neox-frameDecorativeOpacity-value">0.60</span></label><input type="range" id="neox-frameDecorativeOpacity" min="0" max="1" step="0.05" value="0.6"></div>
             </div>
@@ -378,6 +382,7 @@
             <summary>Couleurs &amp; dégradés</summary>
             <div class="neox-grid">
                 <div class="neox-field"><label for="neox-background">Fond</label><input type="color" id="neox-background" value="#ffffff"></div>
+                <div class="neox-field"><label><input type="checkbox" id="neox-transparent"> Fond transparent</label></div>
                 <div class="neox-field">
                     <label for="neox-gradientType">Dégradé &amp; fin</label>
                     <div class="neox-inline">
@@ -475,8 +480,8 @@
     });
 
     var fields = [
-        'content', 'moduleShape', 'finderShape', 'alignmentShape', 'frameShape', 'frameLabel', 'frameColor', 'frameDecorative', 'frameDecorativeOpacity',
-        'foreground', 'background', 'finderColor', 'alignmentColor', 'gradientType', 'gradientTo',
+        'content', 'moduleShape', 'finderShape', 'alignmentShape', 'frameShape', 'frameLabel', 'frameHeader', 'frameColor', 'frameDecorative', 'frameDecorativeOpacity',
+        'foreground', 'background', 'transparent', 'finderColor', 'alignmentColor', 'gradientType', 'gradientTo',
         'finderEffect', 'finderGradientTo', 'finderEyeShape', 'finderEyeScale', 'logoHref', 'finderIconHref',
         'size', 'margin', 'moduleScale', 'testProfile', 'errorCorrection',
     ];
@@ -499,6 +504,7 @@
             finderFrameShape: el('neox-finderShape').value,
             foreground: el('neox-foreground').value,
             background: el('neox-background').value,
+            transparent: el('neox-transparent').checked,
             finderColor: el('neox-finderColor').value,
             alignmentShape: el('neox-alignmentShape').value,
             alignmentColor: el('neox-alignmentColor').value,
@@ -513,6 +519,7 @@
             finderEyeScale: Number(el('neox-finderEyeScale').value),
             frameShape: el('neox-frameShape').value,
             frameLabel: el('neox-frameLabel').value || null,
+            frameHeader: el('neox-frameHeader').value || null,
             frameColor: el('neox-frameColor').value,
             frameDecorative: el('neox-frameDecorative').checked,
             frameDecorativeOpacity: Number(el('neox-frameDecorativeOpacity').value),
@@ -595,7 +602,7 @@
                 message = score + ' — ' + data.warnings.join(' ');
                 kind = 'warning';
             } else {
-                message = score + ' — contraste ' + data.contrastRatio + ':1';
+                message = data.contrastRatio !== null ? score + ' — contraste ' + data.contrastRatio + ':1' : score;
                 kind = 'ok';
             }
             return verifyAutomaticDecode().then(function (decode) {

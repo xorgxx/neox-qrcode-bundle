@@ -12,7 +12,7 @@ Reusable Symfony UX QR Code package: Twig Components + Stimulus + custom SVG ren
 - finder shapes: `square`, `rounded`, `circle`
 - colors, finder color, linear/radial gradients
 - central logo (local URL or data URI) with optional background
-- built-in presets: `classic`, `dots`, `rounded`, `heart`, `gold`, `gradient`
+- built-in presets: `classic`, `dots`, `rounded`, `heart`, `gold`, `neon`, `liquid-security`, `liquid-heart`, `liquid-hexagon`, `liquid-circle`, `liquid-star`
 - QR style validation: contrast, quiet zone, logo/correction warnings
 - `<twig:NeoxQrCode>` display component
 - `<twig:NeoxQrCodeEditor>` live Stimulus editor
@@ -34,7 +34,7 @@ If Flex does not register the bundle automatically:
 Xorgxx\NeoxQrCodeBundle\NeoxQrCodeBundle::class => ['all' => true],
 ```
 
-Import API routes when wanted:
+Import API routes when wanted (required for the live preset selector, the editor and the Studio; `<twig:NeoxQrCode>` alone still renders a static SVG without them):
 
 ```yaml
 # config/routes/neox_qrcode.yaml

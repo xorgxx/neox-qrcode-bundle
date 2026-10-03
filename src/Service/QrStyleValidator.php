@@ -21,11 +21,14 @@ final class QrStyleValidator
     {
         $errors = [];
         $warnings = [];
-        $ratio = $this->contrastRatio($style->foreground, $style->background);
+        $transparent = 'transparent' === $style->background;
+        $ratio = $transparent ? null : $this->contrastRatio($style->foreground, $style->background);
 
-        if ($ratio < 3.0) {
+        if ($transparent) {
+            $warnings[] = 'A transparent background cannot be contrast-checked; test the QR on its final surface.';
+        } elseif (null !== $ratio && $ratio < 3.0) {
             $errors[] = 'Foreground/background contrast is too low for reliable scanning.';
-        } elseif ($ratio < 4.5) {
+        } elseif (null !== $ratio && $ratio < 4.5) {
             $warnings[] = 'Contrast is usable but 4.5:1 or higher is safer.';
         }
 
@@ -76,17 +79,21 @@ final class QrStyleValidator
                 'hasLogo' => null !== $style->logoHref,
                 'hasFinderIcon' => null !== $style->finderIconHref,
                 'hasDecorativeFrame' => null !== $frame && FrameShape::None !== $frame->shape,
+                'transparentBackground' => $transparent,
                 'testProfile' => $profile->value,
                 'testSizes' => implode(', ', $profile->sizes()),
             ],
         );
     }
 
-    private function readabilityScore(QrStyle $style, ErrorCorrection $errorCorrection, ?QrFrameStyle $frame, float $contrastRatio, bool $valid): int
+    private function readabilityScore(QrStyle $style, ErrorCorrection $errorCorrection, ?QrFrameStyle $frame, ?float $contrastRatio, bool $valid): int
     {
         $score = 100;
 
-        if ($contrastRatio < 3.0) {
+        if (null === $contrastRatio) {
+            // Transparent background: contrast depends on the unknown surface.
+            $score -= 10;
+        } elseif ($contrastRatio < 3.0) {
             $score -= min(70, (int) round(50 + (3.0 - $contrastRatio) * 10));
         } elseif ($contrastRatio < 4.5) {
             $score -= (int) round((4.5 - $contrastRatio) * 10);

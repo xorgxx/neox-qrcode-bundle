@@ -1,9 +1,9 @@
 <div
     class="neox-qrcode-editor"
     data-controller="neox-qrcode"
-    data-neox-qrcode-endpoint-value="{{ endpoint }}"
-    data-neox-qrcode-download-endpoint-value="{{ downloadEndpoint }}"
-    data-neox-qrcode-validate-endpoint-value="{{ validateEndpoint }}"
+    data-neox-qrcode-endpoint-value="{{ this.getEndpoint() }}"
+    data-neox-qrcode-download-endpoint-value="{{ this.getDownloadEndpoint() }}"
+    data-neox-qrcode-validate-endpoint-value="{{ this.getValidateEndpoint() }}"
 >
     <div class="neox-qrcode-editor__controls">
         <label>Contenu
@@ -102,6 +102,7 @@
 
         <label>Couleur <input type="color" value="{{ this.defaults.foreground }}" data-neox-qrcode-target="foreground" data-action="input->neox-qrcode#refresh"></label>
         <label>Fond <input type="color" value="{{ this.defaults.background }}" data-neox-qrcode-target="background" data-action="input->neox-qrcode#refresh"></label>
+        <label>Transparent <input type="checkbox" data-neox-qrcode-target="transparent" data-action="change->neox-qrcode#refresh"></label>
         <label>Repères <input type="color" value="{{ this.defaults.finderColor }}" data-neox-qrcode-target="finderColor" data-action="input->neox-qrcode#refresh"></label>
         <label>Align. <input type="color" value="{{ this.defaults.alignmentColor }}" data-neox-qrcode-target="alignmentColor" data-action="input->neox-qrcode#refresh"></label>
         <label>Dégradé repères <input type="color" value="{{ this.defaults.finderColor }}" data-neox-qrcode-target="finderGradientTo" data-action="input->neox-qrcode#refresh"></label>
@@ -121,6 +122,7 @@
         <label>Logo URL locale/data URI <input type="text" placeholder="/images/logo.svg" data-neox-qrcode-target="logoHref" data-action="change->neox-qrcode#refresh"></label>
         <label>Icône repères URL <input type="text" placeholder="/images/icon.svg" data-neox-qrcode-target="finderIconHref" data-action="change->neox-qrcode#refresh"></label>
         <label>Label cadre <input type="text" placeholder="Scan me" data-neox-qrcode-target="frameLabel" data-action="change->neox-qrcode#refresh"></label>
+        <label>En-tête cadre sécurité <input type="text" placeholder="CODE SÉCURITÉ" data-neox-qrcode-target="frameHeader" data-action="change->neox-qrcode#refresh"></label>
 
         <div class="neox-qrcode-editor__actions">
             <button type="button" data-action="neox-qrcode#optimizeReadability">Optimiser la lisibilité</button>

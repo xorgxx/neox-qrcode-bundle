@@ -2,9 +2,9 @@ import { Controller } from '@hotwired/stimulus'
 
 export default class extends Controller {
     static targets = [
-        'content', 'preset', 'moduleShape', 'finderShape', 'alignmentShape', 'foreground', 'background',
+        'content', 'preset', 'moduleShape', 'finderShape', 'alignmentShape', 'foreground', 'background', 'transparent',
         'finderColor', 'alignmentColor', 'gradientType', 'gradientTo', 'size', 'margin', 'moduleScale', 'finderEyeScale',
-        'logoHref', 'finderIconHref', 'finderEffect', 'finderGradientTo', 'finderEyeShape', 'frameShape', 'frameLabel',
+        'logoHref', 'finderIconHref', 'finderEffect', 'finderGradientTo', 'finderEyeShape', 'frameShape', 'frameLabel', 'frameHeader',
         'testProfile', 'preview', 'readabilityGauge', 'status', 'presetPopup'
     ]
 
@@ -194,6 +194,7 @@ export default class extends Controller {
             finderFrameShape: this.hasFinderShapeTarget ? this.finderShapeTarget.value : 'square',
             foreground: this.hasForegroundTarget ? this.foregroundTarget.value : '#111111',
             background: this.hasBackgroundTarget ? this.backgroundTarget.value : '#ffffff',
+            transparent: this.hasTransparentTarget && this.transparentTarget.checked,
             finderColor: this.hasFinderColorTarget ? this.finderColorTarget.value : null,
             alignmentShape: this.hasAlignmentShapeTarget ? this.alignmentShapeTarget.value : 'square',
             alignmentColor: this.hasAlignmentColorTarget ? this.alignmentColorTarget.value : null,
@@ -209,6 +210,7 @@ export default class extends Controller {
             testProfile: this.hasTestProfileTarget ? this.testProfileTarget.value : 'balanced',
             frameShape: this.hasFrameShapeTarget ? this.frameShapeTarget.value : 'none',
             frameLabel: this.hasFrameLabelTarget && this.frameLabelTarget.value ? this.frameLabelTarget.value : null,
+            frameHeader: this.hasFrameHeaderTarget && this.frameHeaderTarget.value ? this.frameHeaderTarget.value : null,
             errorCorrection: 'H',
         }
         if (this._userPresetConfig) {

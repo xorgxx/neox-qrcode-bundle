@@ -58,10 +58,14 @@ final readonly class QrStyle
             throw new \InvalidArgumentException('finderEyeScale must be between 0.85 and 1.08.');
         }
 
-        foreach ([$foreground, $background, $finderColor, $gradientTo, $alignmentColor, $finderGradientTo] as $color) {
+        foreach ([$foreground, $finderColor, $gradientTo, $alignmentColor, $finderGradientTo] as $color) {
             if (null !== $color && !preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
                 throw new \InvalidArgumentException(sprintf('Invalid color "%s".', $color));
             }
+        }
+
+        if ('transparent' !== $background && !preg_match('/^#[0-9a-fA-F]{6}$/', $background)) {
+            throw new \InvalidArgumentException(sprintf('Invalid color "%s"; use a #rrggbb color or "transparent".', $background));
         }
 
         if (GradientType::None !== $gradientType && null === $gradientTo) {
@@ -85,5 +89,65 @@ final readonly class QrStyle
     {
         return str_starts_with($href, '/')
             || 1 === preg_match('#^data:image/(png|jpeg|webp|gif|svg\+xml);#i', $href);
+    }
+
+    /**
+     * Builds a style from the public option names shared by the HTTP API,
+     * user presets and the Twig component, so hydration lives in one place.
+     *
+     * @param array<string, mixed> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        $background = (string) ($data['background'] ?? '#ffffff');
+        if ('transparent' === $background || self::boolValue($data['transparent'] ?? false)) {
+            $background = 'transparent';
+        }
+
+        return new self(
+            size: (int) ($data['size'] ?? 320),
+            margin: (int) ($data['margin'] ?? 4),
+            moduleShape: ModuleShape::from((string) ($data['moduleShape'] ?? 'square')),
+            finderShape: FinderShape::from((string) ($data['finderShape'] ?? 'square')),
+            foreground: (string) ($data['foreground'] ?? '#111111'),
+            background: $background,
+            finderColor: isset($data['finderColor']) ? (string) $data['finderColor'] : null,
+            moduleScale: (float) ($data['moduleScale'] ?? 0.92),
+            gradientType: GradientType::from((string) ($data['gradientType'] ?? 'none')),
+            gradientTo: isset($data['gradientTo']) ? (string) $data['gradientTo'] : null,
+            logoHref: isset($data['logoHref']) && '' !== $data['logoHref'] ? (string) $data['logoHref'] : null,
+            logoScale: (float) ($data['logoScale'] ?? 0.20),
+            logoBackground: self::boolValue($data['logoBackground'] ?? true),
+            alignmentShape: AlignmentShape::from((string) ($data['alignmentShape'] ?? 'square')),
+            alignmentColor: isset($data['alignmentColor']) ? (string) $data['alignmentColor'] : null,
+            finderIconHref: isset($data['finderIconHref']) && '' !== $data['finderIconHref'] ? (string) $data['finderIconHref'] : null,
+            finderIconScale: (float) ($data['finderIconScale'] ?? 0.6),
+            finderEffect: FinderEffect::from((string) ($data['finderEffect'] ?? 'none')),
+            finderGradientTo: isset($data['finderGradientTo']) ? (string) $data['finderGradientTo'] : null,
+            finderCenterShape: isset($data['finderCenterShape']) && '' !== $data['finderCenterShape']
+                ? ModuleShape::from((string) $data['finderCenterShape'])
+                : null,
+            finderEyeShape: isset($data['finderEyeShape']) && '' !== $data['finderEyeShape']
+                ? FinderEyeShape::from((string) $data['finderEyeShape'])
+                : null,
+            finderFrameShape: isset($data['finderFrameShape']) && '' !== $data['finderFrameShape']
+                ? FinderFrameShape::from((string) $data['finderFrameShape'])
+                : null,
+            finderEyeScale: (float) ($data['finderEyeScale'] ?? 1.0),
+        );
+    }
+
+    /**
+     * Booleans arrive as real bools from JSON but as strings from form data;
+     * a plain (bool) cast would turn "false" into true.
+     */
+    private static function boolValue(mixed $value): bool
+    {
+        $filtered = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if (null === $filtered) {
+            throw new \InvalidArgumentException(sprintf('Invalid boolean value "%s".', (string) $value));
+        }
+
+        return $filtered;
     }
 }

@@ -69,9 +69,11 @@ A separate `alignmentColor` can be set. If omitted, it falls back to `finderColo
 
 Gradients are generated in `<defs>` and used as the module fill.
 
+`background` also accepts `transparent` (or the `transparent` option on the component/API): no background rect is emitted and the finder/alignment light cutouts become real holes, so the QR inherits whatever surface it is displayed on. The validator cannot compute a contrast ratio in that case and emits a warning instead.
+
 ## Frame shapes
 
-A `QrFrameStyle` can wrap the whole QR code in a decorative outer shape via `FrameRenderer` (used automatically by `QrCodeGenerator::generate()` when a frame is passed, and exposed on the `NeoxQrCode` Twig component via `frameShape`/`frameLabel`/`frameLabelColor`).
+A `QrFrameStyle` can wrap the whole QR code in a decorative outer shape via `FrameRenderer` (used automatically by `QrCodeGenerator::generate()` when a frame is passed, and exposed on the `NeoxQrCode` Twig component via `frameShape`/`frameLabel`/`frameLabelColor`/`frameHeader`).
 
 - `none` -> no frame (default, fully backward compatible)
 - `circle` -> clips the QR into a circle
@@ -79,6 +81,7 @@ A `QrFrameStyle` can wrap the whole QR code in a decorative outer shape via `Fra
 - `heart` -> clips the QR into a heart shape
 - `star` -> clips the QR into a star shape
 - `hexagon` -> clips the QR into a hexagon shape
+- `security` -> rounded badge with a header band; the band text comes from `QrFrameStyle::$header` (default `CODE SÉCURITÉ`) or the `frameHeader` component/API option
 
 An optional `label` is rendered below the shape. Clipping a QR code into a non-square shape can crop finder/data modules near the edges: always validate scannability with real devices before using a frame in production, and prefer higher error correction (`H`) and a generous `margin`.
 

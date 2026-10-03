@@ -59,4 +59,45 @@ final class QrStyleTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         new QrStyle(finderEyeScale: 1.09);
     }
+
+    public function testTransparentBackgroundIsAccepted(): void
+    {
+        $style = new QrStyle(background: 'transparent');
+
+        self::assertSame('transparent', $style->background);
+    }
+
+    public function testInvalidBackgroundIsRejected(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new QrStyle(background: 'white');
+    }
+
+    public function testFromArrayMapsOptions(): void
+    {
+        $style = QrStyle::fromArray([
+            'size' => 400,
+            'moduleShape' => 'dot',
+            'foreground' => '#000000',
+            'background' => '#eeeeee',
+            'logoBackground' => 'false',
+        ]);
+
+        self::assertSame(400, $style->size);
+        self::assertSame(ModuleShape::Dot, $style->moduleShape);
+        self::assertFalse($style->logoBackground);
+    }
+
+    public function testFromArrayTransparentFlagOverridesBackground(): void
+    {
+        $style = QrStyle::fromArray(['background' => '#ffffff', 'transparent' => true]);
+
+        self::assertSame('transparent', $style->background);
+    }
+
+    public function testFromArrayRejectsNonBoolean(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        QrStyle::fromArray(['logoBackground' => 'maybe']);
+    }
 }

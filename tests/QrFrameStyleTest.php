@@ -37,4 +37,17 @@ final class QrFrameStyleTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         new QrFrameStyle(label: str_repeat('a', 61));
     }
+
+    public function testHeaderTooLongThrows(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new QrFrameStyle(header: str_repeat('a', 61));
+    }
+
+    public function testAcceptsHeader(): void
+    {
+        $frame = new QrFrameStyle(shape: FrameShape::Security, header: 'SECURITY CODE');
+
+        self::assertSame('SECURITY CODE', $frame->header);
+    }
 }

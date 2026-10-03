@@ -64,7 +64,7 @@ For safety, logo hrefs are limited to application-relative URLs and image data U
 />
 ```
 
-`frameShape` accepts `none`, `circle`, `rounded_square`, `heart`, `star`, `hexagon`. Non-square frames clip the QR code, so validate scannability before production use.
+`frameShape` accepts `none`, `circle`, `rounded_square`, `heart`, `star`, `hexagon`, `security`. Non-square frames clip the QR code, so validate scannability before production use. The `security` frame renders a header band whose text can be customized with `frameHeader` (default `CODE SÉCURITÉ`).
 
 ## Presets
 
@@ -72,23 +72,37 @@ For safety, logo hrefs are limited to application-relative URLs and image data U
 <twig:NeoxQrCode content="https://example.com" preset="gold" />
 ```
 
+`preset` first looks up built-in presets, then user presets saved from the Studio/API (`UserPresetStore`) — `<twig:NeoxQrCode preset="my-custom" />` works with both.
+
 Built-in presets (`Xorgxx\NeoxQrCodeBundle\Service\QrPresetRegistry`):
 
 - `classic` -> default square style
 - `dots` -> dotted modules, rounded finders
 - `rounded` -> rounded modules and finders
-- `heart` -> heart-shaped modules
+- `heart` -> liquid red modules inside a heart frame
 - `gold` -> dotted modules with a gold finder color
-- `gradient` -> rounded modules with a linear foreground gradient
-- `minimal` -> dotted modules with minimalist open-bracket finders
-- `inverted` -> rounded modules with color-inverted finders
-- `star` -> diamond modules with star-shaped gold finders
-- `outline` -> square modules with a double-stroke finder outline
-- `stitched` -> rounded modules with a dashed finder outline
-- `floating` -> rounded modules with a drop-shadow finder effect
 - `neon` -> dotted modules with a radial gradient and matching finder gradient
+- `liquid-security` -> liquid modules inside the `security` badge frame
+- `liquid-heart` -> liquid blue modules inside a heart frame
+- `liquid-hexagon` -> liquid modules inside a hexagon frame
+- `liquid-circle` -> liquid modules inside a circle frame
+- `liquid-star` -> liquid modules inside a star frame
 
 Register your own with `QrPresetRegistry::register()` (see `docs/extension.md`).
+
+## Bare output and transparency
+
+```twig
+{# SVG only, no surrounding markup #}
+<twig:NeoxQrCode content="https://example.com" :bare="true" />
+
+{# Transparent background (test the QR on its final surface) #}
+<twig:NeoxQrCode content="https://example.com" :transparent="true" />
+```
+
+`:transparent="true"` is equivalent to `background="transparent"`; no background rect is emitted and finder/alignment cutouts become real holes.
+
+`<twig:NeoxQrCode>` renders a static SVG even when the bundle routes are not imported; the preset selector and the Studio link are simply skipped until `@NeoxQrCodeBundle/config/routes.yaml` is imported.
 
 ## Editor
 

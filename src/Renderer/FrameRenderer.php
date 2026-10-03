@@ -71,13 +71,14 @@ final readonly class FrameRenderer
             // Clip bottom corners of header (overlay rect to square them off)
             $svg .= sprintf('<rect y="%.4F" width="%d" height="%.4F" fill="%s"/>', $headerHeight * 0.5, $view, $headerHeight * 0.5, $fg);
 
-            // 3. Title text in header
+            // 3. Title text in header (configurable, defaults to French security wording)
             $svg .= sprintf(
-                '<text x="%.4F" y="%.4F" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="%.4F" fill="%s" letter-spacing="0.1em">CODE SÉCURITÉ</text>',
+                '<text x="%.4F" y="%.4F" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="%.4F" fill="%s" letter-spacing="0.1em">%s</text>',
                 $view / 2,
                 $headerHeight * 0.68,
                 $headerHeight * 0.42,
                 $bg,
+                $this->escape($frame->header ?? 'CODE SÉCURITÉ'),
             );
 
             // 4. QR area below header

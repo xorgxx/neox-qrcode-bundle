@@ -15,7 +15,7 @@ final readonly class QrValidationReport
         public bool $valid,
         public array $errors = [],
         public array $warnings = [],
-        public float $contrastRatio = 0.0,
+        public ?float $contrastRatio = null,
         public int $readabilityScore = 0,
         public array $readabilityDetails = [],
     ) {

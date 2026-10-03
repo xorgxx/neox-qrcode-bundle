@@ -93,6 +93,16 @@ final class QrStyleValidatorTest extends TestCase
         self::assertGreaterThan(0.0, $report->contrastRatio);
     }
 
+    public function testTransparentBackgroundSkipsContrastCheck(): void
+    {
+        $report = $this->validator->validate(new QrStyle(background: 'transparent'));
+
+        self::assertTrue($report->valid);
+        self::assertNull($report->contrastRatio);
+        self::assertNotEmpty($report->warnings);
+        self::assertLessThan(100, $report->readabilityScore);
+    }
+
     public function testDefaultStyleHasHighEstimatedReadability(): void
     {
         $report = $this->validator->validate(new QrStyle());

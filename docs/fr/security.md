@@ -29,7 +29,7 @@ $token = $secureQr->sign(
 $payload = $secureQr->verify($token, consume: true);
 ```
 
-L'implémentation par défaut utilise `CacheSingleUseTokenStore` basé sur le cache Symfony `cache.app`. Pour un contrôle d'accès multi-nœuds haute assurance, implémentez `SingleUseTokenStoreInterface` avec un store de tokens atomique en base de données/Redis et câblez-le dans `services.yaml` :
+L'implémentation par défaut utilise `CacheSingleUseTokenStore` basé sur le cache Symfony `cache.app`. La consommation est atomique : chaque appelant stocke une claim aléatoire via le callback `get()` protégé contre les stampedes, et seul l'appelant dont la claim a été persistée l'emporte — deux vérifications concurrentes du même `jti` ne peuvent pas réussir toutes les deux. `isConsumed()` est une sonde en lecture seule (`hasItem()`) qui ne marque jamais un token. Pour un contrôle d'accès multi-nœuds haute assurance, implémentez `SingleUseTokenStoreInterface` avec un store de tokens atomique en base de données/Redis et câblez-le dans `services.yaml` :
 
 ```yaml
 Xorgxx\NeoxQrCodeBundle\Security\SingleUseTokenStoreInterface:

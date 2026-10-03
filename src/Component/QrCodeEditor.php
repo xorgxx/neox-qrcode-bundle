@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Xorgxx\NeoxQrCodeBundle\Component;
 
+use Symfony\Component\Routing\Exception\ExceptionInterface as RoutingException;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 use Xorgxx\NeoxQrCodeBundle\Service\QrPresetRegistry;
 
@@ -21,12 +23,43 @@ final class QrCodeEditor
     public const DEFAULT_FINDER_EYE_SCALE = 1.0;
 
     public string $content = 'https://example.com';
-    public string $endpoint = '/api/qrcode/svg';
-    public string $downloadEndpoint = '/api/qrcode/png';
-    public string $validateEndpoint = '/api/qrcode/validate';
+    public ?string $endpoint = null;
+    public ?string $downloadEndpoint = null;
+    public ?string $validateEndpoint = null;
 
-    public function __construct(private readonly QrPresetRegistry $presets)
+    public function __construct(
+        private readonly QrPresetRegistry $presets,
+        private readonly UrlGeneratorInterface $urlGenerator,
+    ) {
+    }
+
+    /**
+     * Endpoints resolve from the real route names so the editor keeps working
+     * when routes are mounted under a prefix; the literal paths remain the
+     * fallback when routes are not imported.
+     */
+    public function getEndpoint(): string
     {
+        return $this->endpoint ?? $this->routeUrl('xorgxx_neox_qrcode_api_svg', '/api/qrcode/svg');
+    }
+
+    public function getDownloadEndpoint(): string
+    {
+        return $this->downloadEndpoint ?? $this->routeUrl('xorgxx_neox_qrcode_api_png', '/api/qrcode/png');
+    }
+
+    public function getValidateEndpoint(): string
+    {
+        return $this->validateEndpoint ?? $this->routeUrl('xorgxx_neox_qrcode_api_validate', '/api/qrcode/validate');
+    }
+
+    private function routeUrl(string $route, string $fallback): string
+    {
+        try {
+            return $this->urlGenerator->generate($route);
+        } catch (RoutingException) {
+            return $fallback;
+        }
     }
 
     /** @return list<string> */

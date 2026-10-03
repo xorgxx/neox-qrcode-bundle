@@ -45,18 +45,21 @@ Exemple de payload :
   "finderEyeShape": "circle",
   "frameShape": "circle",
   "frameLabel": "Scannez-moi",
+  "frameHeader": "CODE SÉCURITÉ",
   "frameLabelColor": "#111111",
   "errorCorrection": "H"
 }
 ```
 
-Voir `docs/styling.md` pour les valeurs de `finderFrameShape`, `finderEyeShape`, `finderEffect` et `frameShape`.
+Voir `docs/styling.md` pour les valeurs de `finderFrameShape`, `finderEyeShape`, `finderEffect` et `frameShape`. `frameHeader` personnalise le texte du bandeau du cadre `security` (défaut : `CODE SÉCURITÉ`).
+
+`background` accepte `"transparent"` (ou `"transparent": true`) pour un QR sans fond ; `contrastRatio` des réponses `/validate` vaut alors `null` et un avertissement est émis.
 
 Pour une API publique, ajoutez votre propre authentification/limiteur de débit/règles de firewall. Le package ne publie intentionnellement pas d'endpoint non authentifié qui crée des tokens de sécurité signés.
 
 ## Limiteur de débit
 
-Les endpoints POST utilisent l'attribut `#[RateLimiter('xorgxx_neox_qrcode_api')]`. Pour l'activer, installez `symfony/rate-limiter` et importez la config du bundle :
+Les endpoints mutants appellent le limiteur `xorgxx_neox_qrcode_api` **s'il est configuré**. Le contrôleur consomme un jeton par requête et répond `429` quand le seau est vide. Pour l'activer, installez `symfony/rate-limiter` et importez la config du bundle :
 
 ```yaml
 # config/packages/neox_qrcode.yaml
